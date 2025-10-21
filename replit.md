@@ -111,11 +111,21 @@ See `design_guidelines.md` for complete design specifications.
 ## Database Seeding
 The database is pre-seeded with 17 MTN data packages matching the original HTML prototype pricing.
 
-## Making an Admin User
-To grant admin access to a user:
+## Accessing the Admin Dashboard
+
+### First Time Setup (Fresh Database)
+1. The first user to log in via Replit Auth will automatically be granted admin access
+2. Navigate to `/admin` in your browser
+3. You'll be redirected to Replit Auth login
+4. After logging in, you'll have full admin access
+
+### Adding More Admins
+To grant admin access to additional users:
 ```sql
-UPDATE users SET is_admin = true WHERE email = 'your@email.com';
+UPDATE users SET is_admin = true WHERE email = 'user@example.com';
 ```
+
+**Note**: The automatic admin promotion only works for the very first user when the database has no existing admins. This ensures secure, controlled access to the admin panel.
 
 ## Payment Flow
 1. Customer selects package and enters contact info
