@@ -1,0 +1,196 @@
+{
+  "info": {
+    "name": "DataXpress API Collection",
+    "description": "Complete collection for DataXpress API endpoints including result checker and data purchase services",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://www.dataxpress.shop",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "your_api_key_here",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Result Checker API",
+      "item": [
+        {
+          "name": "Purchase Result Checker",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-KEY",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"checker_type\": \"WAEC\",\n  \"phone_number\": \"0241234567\",\n  \"ref\": \"ORDER_{{$timestamp}}\",\n  \"skip_sms\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/result-checker/purchase",
+              "host": ["{{base_url}}"],
+              "path": ["api", "result-checker", "purchase"]
+            },
+            "description": "Purchase a result checker for ₵17.00. Each purchase deducts from your wallet balance."
+          }
+        },
+        {
+          "name": "Get Available Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-KEY",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/result-checker/products",
+              "host": ["{{base_url}}"],
+              "path": ["api", "result-checker", "products"]
+            },
+            "description": "Get available result checker products and pricing information."
+          }
+        },
+        {
+          "name": "Get Usage Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-KEY",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/result-checker/usage",
+              "host": ["{{base_url}}"],
+              "path": ["api", "result-checker", "usage"]
+            },
+            "description": "Get your API key usage statistics and information."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Data Purchase API",
+      "item": [
+        {
+          "name": "Purchase Data Bundle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-KEY",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ref\": \"ORDER_{{$timestamp}}\",\n  \"phone\": \"0551234567\",\n  \"volumeInMB\": 1,\n  \"networkType\": \"mtn\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buy-data",
+              "host": ["{{base_url}}"],
+              "path": ["api", "buy-data"]
+            },
+            "description": "Purchase data bundles for any supported network. Prices are automatically calculated based on volume."
+          }
+        },
+        {
+          "name": "Get Available Packages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-KEY",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/packages/mtn",
+              "host": ["{{base_url}}"],
+              "path": ["api", "packages", "mtn"]
+            },
+            "description": "Retrieve available data packages for a specific network with pricing information. Replace 'mtn' with: telecel, tigo, or airteltigo"
+          }
+        },
+        {
+          "name": "Get Cost Price",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-KEY",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"networkType\": \"mtn\",\n  \"volumeInMB\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/get-cost-price",
+              "host": ["{{base_url}}"],
+              "path": ["api", "get-cost-price"]
+            },
+            "description": "Get the cost price for a specific data package before making a purchase."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Order Management",
+      "item": [
+        {
+          "name": "Check Order Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-KEY",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/order-status/ORDER_123456",
+              "host": ["{{base_url}}"],
+              "path": ["api", "order-status", "ORDER_123456"]
+            },
+            "description": "Check the status of a data order using the reference number."
+          }
+        }
+      ]
+    }
+  ]
+}
