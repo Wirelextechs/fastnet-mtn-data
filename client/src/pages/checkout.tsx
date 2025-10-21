@@ -67,6 +67,7 @@ export default function Checkout() {
         key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "",
         email: data.order.email,
         amount: Math.round(Number(data.order.amount) * 100),
+        currency: "GHS", // Ghanaian Cedis - change to "NGN" if your account doesn't support GHS
         ref: data.order.paystackReference,
         onClose: () => {
           setIsProcessingPayment(false);
