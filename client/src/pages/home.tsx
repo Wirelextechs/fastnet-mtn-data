@@ -14,7 +14,14 @@ export default function Home() {
     queryKey: ["/api/packages"],
   });
 
-  const activePackages = packages?.filter(pkg => pkg.isActive) || [];
+  // Filter active packages and sort by data amount (1GB -> 100GB)
+  const activePackages = (packages?.filter(pkg => pkg.isActive) || []).sort((a, b) => {
+    const getNumericValue = (dataAmount: string) => {
+      const match = dataAmount.match(/(\d+\.?\d*)/);
+      return match ? parseFloat(match[1]) : 0;
+    };
+    return getNumericValue(a.dataAmount) - getNumericValue(b.dataAmount);
+  });
 
   const handleContinue = () => {
     if (selectedPackageId) {

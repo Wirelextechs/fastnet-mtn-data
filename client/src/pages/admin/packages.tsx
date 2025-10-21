@@ -54,8 +54,17 @@ export default function AdminPackages() {
     }
   }, [isAuthenticated, isAuthLoading, toast]);
 
-  const { data: packages, isLoading } = useQuery<Package[]>({
+  const { data: packagesData, isLoading } = useQuery<Package[]>({
     queryKey: ["/api/packages"],
+  });
+
+  // Sort packages by data amount (1GB -> 100GB)
+  const packages = packagesData?.sort((a, b) => {
+    const getNumericValue = (dataAmount: string) => {
+      const match = dataAmount.match(/(\d+\.?\d*)/);
+      return match ? parseFloat(match[1]) : 0;
+    };
+    return getNumericValue(a.dataAmount) - getNumericValue(b.dataAmount);
   });
 
   const form = useForm<PackageFormData>({
