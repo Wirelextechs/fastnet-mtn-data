@@ -5,8 +5,12 @@ import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
 import { insertPackageSchema, insertOrderSchema } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { z } from "zod";
+import { initializeDatabase } from "./init";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize database (seed packages if empty)
+  await initializeDatabase();
+  
   // Auth middleware
   await setupAuth(app);
 
