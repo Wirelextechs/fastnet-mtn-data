@@ -127,24 +127,51 @@ UPDATE users SET is_admin = true WHERE email = 'user@example.com';
 
 **Note**: The automatic admin promotion only works for the very first user when the database has no existing admins. This ensures secure, controlled access to the admin panel.
 
-## Payment Flow
+## Payment & Fulfillment Flow
 1. Customer selects package and enters contact info
 2. Frontend calls POST /api/orders (sends only packageId, phone, email)
 3. Backend fetches package, generates Paystack reference, creates order with server price
 4. Frontend receives order details and initializes Paystack inline SDK
 5. Customer completes payment with Paystack
-6. Paystack redirects to confirmation page with reference
-7. Webhook updates order status to "completed" (or admin can manually update)
+6. Paystack webhook updates order status to "completed"
+7. **Automatic fulfillment**: Order is sent to DataXpress API to deliver data to customer
+8. Order marked as "fulfilled" or "failed" with error message if delivery fails
+
+## DataXpress Integration
+The application integrates with DataXpress API for automatic MTN data delivery:
+
+### Environment Variables
+- `DATAXPRESS_API_KEY` - Stored in Replit Secrets for secure API access
+
+### API Features
+- **Automatic Fulfillment**: When payment is confirmed, data is automatically sent to customer's phone
+- **Manual Fulfillment**: Admins can manually trigger fulfillment from orders page (Send icon)
+- **Wallet Balance**: Real-time balance display in admin dashboard (refreshes every 30s)
+- **Fulfillment Status**: Tracks pending, processing, fulfilled, or failed status for each order
+- **Error Handling**: Failed fulfillments show error messages in admin panel for troubleshooting
+
+### Order Schema
+Orders now include fulfillment tracking fields:
+- `fulfillmentStatus`: pending | processing | fulfilled | failed
+- `fulfillmentError`: Error message if fulfillment fails
+- `dataxpressReference`: DataXpress order reference for tracking
+
+### Admin Features
+- View fulfillment status alongside payment status in orders table
+- Manual fulfill button for completed orders that haven't been fulfilled
+- Real-time DataXpress wallet balance in dashboard
+- Error messages displayed for failed fulfillments
 
 ## Future Enhancements
-- Automated MTN data delivery via SMS/API integration
 - Email notifications for order confirmations
 - Advanced order filtering and search in admin panel
 - Data export functionality (CSV/Excel)
 - Customer order tracking page
 - Paystack webhook signature verification
 - Rate limiting for admin endpoints
+- Support for other networks (Vodafone, AirtelTigo, Telecel)
 
 ## Recent Changes
 - October 21, 2025: Initial implementation with full MVP features
+- October 21, 2025: DataXpress integration for automatic order fulfillment
 - Security hardening: Server-side pricing, schema validation, real-time polling

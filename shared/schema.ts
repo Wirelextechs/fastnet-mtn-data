@@ -68,6 +68,9 @@ export const orders = pgTable("orders", {
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   paystackReference: varchar("paystack_reference"),
   status: varchar("status").notNull().default("pending"), // pending, processing, completed, failed
+  fulfillmentStatus: varchar("fulfillment_status").default("pending"), // pending, processing, fulfilled, failed
+  fulfillmentError: text("fulfillment_error"), // Store error message if fulfillment fails
+  dataxpressReference: varchar("dataxpress_reference"), // DataXpress order reference
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

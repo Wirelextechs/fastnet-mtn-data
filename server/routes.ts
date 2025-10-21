@@ -6,6 +6,69 @@ import { insertPackageSchema, insertOrderSchema } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { initializeDatabase } from "./init";
+import { purchaseDataBundle, getWalletBalance } from "./dataxpress";
+
+/**
+ * Fulfill an order by sending data to customer via DataXpress
+ */
+async function fulfillOrder(orderId: string): Promise<void> {
+  try {
+    const order = await storage.getOrderById(orderId);
+    if (!order) {
+      throw new Error(`Order ${orderId} not found`);
+    }
+
+    // Skip if already fulfilled or processing
+    if (order.fulfillmentStatus === "fulfilled" || order.fulfillmentStatus === "processing") {
+      console.log(`⏭️  Order ${orderId} already ${order.fulfillmentStatus}, skipping`);
+      return;
+    }
+
+    // Get package details
+    const pkg = await storage.getPackageById(order.packageId);
+    if (!pkg) {
+      throw new Error(`Package ${order.packageId} not found`);
+    }
+
+    // Update to processing
+    await storage.updateOrder(orderId, {
+      fulfillmentStatus: "processing",
+    });
+
+    console.log(`🚀 Fulfilling order ${orderId}: ${pkg.dataAmount} to ${order.phoneNumber}`);
+
+    // Send to DataXpress
+    const result = await purchaseDataBundle(
+      order.phoneNumber,
+      pkg.dataAmount,
+      order.paystackReference || order.id
+    );
+
+    if (result.success) {
+      // Update order as fulfilled
+      await storage.updateOrder(orderId, {
+        fulfillmentStatus: "fulfilled",
+        fulfillmentError: null,
+        dataxpressReference: result.data?.reference || order.paystackReference,
+      });
+      console.log(`✅ Order ${orderId} fulfilled successfully`);
+    } else {
+      // Mark as failed with error message
+      await storage.updateOrder(orderId, {
+        fulfillmentStatus: "failed",
+        fulfillmentError: result.message,
+      });
+      console.error(`❌ Order ${orderId} fulfillment failed: ${result.message}`);
+    }
+  } catch (error: any) {
+    console.error(`❌ Error fulfilling order ${orderId}:`, error);
+    await storage.updateOrder(orderId, {
+      fulfillmentStatus: "failed",
+      fulfillmentError: error.message || "Unknown error",
+    });
+    throw error;
+  }
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database (seed packages if empty)
@@ -205,6 +268,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Manual fulfillment endpoint for admin
+  app.post("/api/orders/:id/fulfill", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await fulfillOrder(req.params.id);
+      const updatedOrder = await storage.getOrderById(req.params.id);
+      res.json(updatedOrder);
+    } catch (error: any) {
+      console.error("Error fulfilling order:", error);
+      res.status(500).json({ message: error.message || "Failed to fulfill order" });
+    }
+  });
+
+  // Get DataXpress wallet balance
+  app.get("/api/wallet/balance", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const result = await getWalletBalance();
+      if (result.success) {
+        res.json({
+          balance: result.balance,
+          currency: result.currency,
+        });
+      } else {
+        res.status(500).json({ message: result.message || "Failed to fetch wallet balance" });
+      }
+    } catch (error: any) {
+      console.error("Error fetching wallet balance:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch wallet balance" });
+    }
+  });
+
   // Paystack webhook endpoint for payment verification
   app.post("/api/webhooks/paystack", async (req, res) => {
     try {
@@ -214,10 +307,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (event.event === "charge.success") {
         const reference = event.data.reference;
         
-        // Update order status to completed
+        // Update order status to completed and fulfill automatically
         const order = await storage.getOrderByReference(reference);
         if (order) {
           await storage.updateOrder(order.id, { status: "completed" });
+          
+          // Trigger automatic fulfillment (don't wait for it to complete)
+          fulfillOrder(order.id).catch((error) => {
+            console.error(`Failed to fulfill order ${order.id}:`, error);
+          });
         }
       }
       

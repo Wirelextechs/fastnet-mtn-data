@@ -1,0 +1,211 @@
+/**
+ * DataXpress API Integration
+ * https://www.dataxpress.shop/api-dev
+ */
+
+const DATAXPRESS_BASE_URL = "https://www.dataxpress.shop";
+const API_KEY = process.env.DATAXPRESS_API_KEY;
+
+if (!API_KEY) {
+  console.warn("⚠️  DATAXPRESS_API_KEY not set - order fulfillment will be disabled");
+}
+
+// Map our package sizes to DataXpress volumeInMB
+// DataXpress expects volume in MB (e.g., 1024 for 1GB)
+function parseDataAmount(dataAmount: string): number {
+  const match = dataAmount.match(/^(\d+)GB$/);
+  if (!match) {
+    throw new Error(`Invalid data amount format: ${dataAmount}`);
+  }
+  return parseInt(match[1]) * 1024; // Convert GB to MB
+}
+
+interface DataXpressOrderRequest {
+  ref: string;
+  phone: string;
+  volumeInMB: number;
+  networkType: "mtn" | "telecel" | "tigo" | "airteltigo";
+}
+
+interface DataXpressResponse {
+  status: "success" | "error";
+  message: string;
+  data?: any;
+}
+
+interface WalletBalanceData {
+  balance: string;
+  currency: string;
+  wallet_id: number;
+  user_id: number;
+  last_transaction_at: string;
+}
+
+/**
+ * Purchase a data bundle via DataXpress
+ */
+export async function purchaseDataBundle(
+  phoneNumber: string,
+  dataAmount: string,
+  orderReference: string
+): Promise<{ success: boolean; message: string; data?: any }> {
+  if (!API_KEY) {
+    return {
+      success: false,
+      message: "DataXpress API key not configured",
+    };
+  }
+
+  try {
+    const volumeInMB = parseDataAmount(dataAmount);
+
+    const requestBody: DataXpressOrderRequest = {
+      ref: orderReference,
+      phone: phoneNumber,
+      volumeInMB,
+      networkType: "mtn", // Currently only supporting MTN
+    };
+
+    console.log(`📡 Sending data order to DataXpress:`, {
+      phone: phoneNumber,
+      amount: dataAmount,
+      ref: orderReference,
+    });
+
+    const response = await fetch(`${DATAXPRESS_BASE_URL}/api/buy-data`, {
+      method: "POST",
+      headers: {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const result: DataXpressResponse = await response.json();
+
+    if (!response.ok) {
+      console.error(`❌ DataXpress API error:`, result);
+      return {
+        success: false,
+        message: result.message || `API request failed with status ${response.status}`,
+      };
+    }
+
+    if (result.status === "success") {
+      console.log(`✅ DataXpress order successful:`, result.data);
+      return {
+        success: true,
+        message: result.message,
+        data: result.data,
+      };
+    } else {
+      console.error(`❌ DataXpress order failed:`, result.message);
+      return {
+        success: false,
+        message: result.message,
+      };
+    }
+  } catch (error) {
+    console.error(`❌ DataXpress API error:`, error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+/**
+ * Check DataXpress wallet balance
+ */
+export async function getWalletBalance(): Promise<{
+  success: boolean;
+  balance?: string;
+  currency?: string;
+  message?: string;
+}> {
+  if (!API_KEY) {
+    return {
+      success: false,
+      message: "DataXpress API key not configured",
+    };
+  }
+
+  try {
+    const response = await fetch(`${DATAXPRESS_BASE_URL}/api/wallet-balance`, {
+      method: "GET",
+      headers: {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const result: DataXpressResponse = await response.json();
+
+    if (!response.ok || result.status !== "success") {
+      return {
+        success: false,
+        message: result.message || "Failed to fetch wallet balance",
+      };
+    }
+
+    const walletData = result.data as WalletBalanceData;
+    return {
+      success: true,
+      balance: walletData.balance,
+      currency: walletData.currency,
+    };
+  } catch (error) {
+    console.error(`❌ Failed to fetch wallet balance:`, error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+/**
+ * Check order status on DataXpress
+ */
+export async function checkOrderStatus(
+  orderReference: string
+): Promise<{ success: boolean; status?: string; message?: string; data?: any }> {
+  if (!API_KEY) {
+    return {
+      success: false,
+      message: "DataXpress API key not configured",
+    };
+  }
+
+  try {
+    const response = await fetch(
+      `${DATAXPRESS_BASE_URL}/api/order-status/${orderReference}`,
+      {
+        method: "GET",
+        headers: {
+          "X-API-KEY": API_KEY,
+        },
+      }
+    );
+
+    const result: DataXpressResponse = await response.json();
+
+    if (!response.ok || result.status !== "success") {
+      return {
+        success: false,
+        message: result.message || "Failed to check order status",
+      };
+    }
+
+    return {
+      success: true,
+      status: result.data?.status,
+      data: result.data,
+    };
+  } catch (error) {
+    console.error(`❌ Failed to check order status:`, error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}

@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Send } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
 export default function AdminOrders() {
@@ -122,6 +122,37 @@ export default function AdminOrders() {
     },
   });
 
+  const fulfillOrderMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("POST", `/api/orders/${id}/fulfill`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+      toast({
+        title: "Success",
+        description: "Order sent to DataXpress for fulfillment",
+      });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fulfill order",
+        variant: "destructive",
+      });
+    },
+  });
+
   if (isAuthLoading || !isAuthenticated) {
     return null;
   }
@@ -172,59 +203,102 @@ export default function AdminOrders() {
                     <TableHead>Phone</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Payment</TableHead>
+                    <TableHead>Fulfillment</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {orders.map((order) => (
-                    <TableRow key={order.id} data-testid={`row-order-${order.id}`}>
-                      <TableCell className="font-medium">{order.package?.dataAmount}</TableCell>
-                      <TableCell>{order.phoneNumber}</TableCell>
-                      <TableCell>{order.email}</TableCell>
-                      <TableCell>GH¢{Number(order.amount).toFixed(2)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className={`h-2 w-2 rounded-full ${
-                              order.status === "completed"
-                                ? "bg-chart-3"
-                                : order.status === "pending"
-                                ? "bg-primary"
-                                : order.status === "processing"
-                                ? "bg-ring"
-                                : "bg-destructive"
-                            }`}
-                          />
-                          <span className="capitalize">{order.status}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(order)}
-                            data-testid={`button-edit-${order.id}`}
-                          >
-                            <Pencil className="h-4 w-4 text-ring" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeletingOrderId(order.id)}
-                            data-testid={`button-delete-${order.id}`}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {orders.map((order) => {
+                    const canFulfill = order.status === "completed" && 
+                      (order.fulfillmentStatus === "pending" || order.fulfillmentStatus === "failed");
+                    
+                    return (
+                      <TableRow key={order.id} data-testid={`row-order-${order.id}`}>
+                        <TableCell className="font-medium">{order.package?.dataAmount}</TableCell>
+                        <TableCell>{order.phoneNumber}</TableCell>
+                        <TableCell>{order.email}</TableCell>
+                        <TableCell>GH¢{Number(order.amount).toFixed(2)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`h-2 w-2 rounded-full ${
+                                order.status === "completed"
+                                  ? "bg-chart-3"
+                                  : order.status === "pending"
+                                  ? "bg-primary"
+                                  : order.status === "processing"
+                                  ? "bg-ring"
+                                  : "bg-destructive"
+                              }`}
+                            />
+                            <span className="capitalize">{order.status}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className={`h-2 w-2 rounded-full ${
+                                  order.fulfillmentStatus === "fulfilled"
+                                    ? "bg-chart-3"
+                                    : order.fulfillmentStatus === "processing"
+                                    ? "bg-ring"
+                                    : order.fulfillmentStatus === "failed"
+                                    ? "bg-destructive"
+                                    : "bg-muted"
+                                }`}
+                              />
+                              <span className="capitalize text-sm">
+                                {order.fulfillmentStatus || "pending"}
+                              </span>
+                            </div>
+                            {order.fulfillmentError && (
+                              <span className="text-xs text-destructive">
+                                {order.fulfillmentError}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            {canFulfill && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => fulfillOrderMutation.mutate(order.id)}
+                                disabled={fulfillOrderMutation.isPending}
+                                data-testid={`button-fulfill-${order.id}`}
+                                title="Send data to customer"
+                              >
+                                <Send className="h-4 w-4 text-chart-3" />
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(order)}
+                              data-testid={`button-edit-${order.id}`}
+                            >
+                              <Pencil className="h-4 w-4 text-ring" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeletingOrderId(order.id)}
+                              data-testid={`button-delete-${order.id}`}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

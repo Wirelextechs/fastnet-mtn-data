@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, ShoppingCart, Clock, CheckCircle2 } from "lucide-react";
+import { Package, ShoppingCart, Clock, CheckCircle2, Wallet } from "lucide-react";
 import type { OrderWithPackage } from "@shared/schema";
 
 export default function AdminDashboard() {
@@ -31,6 +31,14 @@ export default function AdminDashboard() {
 
   const { data: packages, isLoading: isLoadingPackages } = useQuery({
     queryKey: ["/api/packages"],
+  });
+
+  const { data: walletData, isLoading: isLoadingWallet } = useQuery<{
+    balance: string;
+    currency: string;
+  }>({
+    queryKey: ["/api/wallet/balance"],
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   if (isAuthLoading || !isAuthenticated) {
@@ -60,6 +68,13 @@ export default function AdminDashboard() {
       testId: "stat-revenue",
     },
     {
+      title: "DataXpress Balance",
+      value: isLoadingWallet ? "..." : walletData ? `${walletData.currency} ${Number(walletData.balance).toFixed(2)}` : "N/A",
+      icon: Wallet,
+      color: "text-chart-3",
+      testId: "stat-wallet-balance",
+    },
+    {
       title: "Pending",
       value: pendingOrders,
       icon: Clock,
@@ -83,7 +98,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
