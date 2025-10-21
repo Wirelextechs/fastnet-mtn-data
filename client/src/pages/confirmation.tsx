@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import type { OrderWithPackage } from "@shared/schema";
 
 export default function Confirmation() {
@@ -50,7 +50,9 @@ export default function Confirmation() {
         {/* Success/Error Icon */}
         <div className="mb-6">
           {isSuccess ? (
-            <CheckCircle2 className="mx-auto h-20 w-20 text-chart-3" data-testid="icon-success" />
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
+              <CheckCircle className="h-12 w-12 text-green-600 dark:text-green-500" data-testid="icon-success" />
+            </div>
           ) : (
             <XCircle className="mx-auto h-20 w-20 text-destructive" data-testid="icon-error" />
           )}
