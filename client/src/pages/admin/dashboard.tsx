@@ -54,7 +54,7 @@ export default function AdminDashboard() {
     },
     {
       title: "Total Revenue",
-      value: `₦${totalRevenue.toFixed(2)}`,
+      value: `GH¢${totalRevenue.toFixed(2)}`,
       icon: Package,
       color: "text-primary",
       testId: "stat-revenue",
@@ -126,7 +126,7 @@ export default function AdminDashboard() {
                     <p className="text-sm text-muted-foreground">{order.email}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">₦{Number(order.amount).toFixed(2)}</p>
+                    <p className="font-semibold">GH¢{Number(order.amount).toFixed(2)}</p>
                     <div className="flex items-center justify-end gap-1.5 text-sm">
                       <span
                         className={`h-2 w-2 rounded-full ${

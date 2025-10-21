@@ -271,7 +271,7 @@ export default function AdminPackages() {
               <CardContent className="space-y-3">
                 <div className="inline-block rounded bg-foreground px-3 py-1.5">
                   <span className="text-lg font-extrabold text-primary">
-                    ₦{Number(pkg.price).toFixed(0)}
+                    GH¢{Number(pkg.price).toFixed(0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
@@ -315,7 +315,7 @@ export default function AdminPackages() {
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price (₦)</FormLabel>
+                    <FormLabel>Price (GH¢)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
