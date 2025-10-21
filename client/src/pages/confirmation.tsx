@@ -79,7 +79,7 @@ export default function Confirmation() {
             <div className="flex justify-between">
               <span className="text-muted-foreground">Amount:</span>
               <span className="font-semibold" data-testid="text-amount">
-                GH¢{Number(order.amount).toFixed(2)}
+                ₦{Number(order.amount).toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between">

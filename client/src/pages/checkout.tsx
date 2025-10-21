@@ -67,7 +67,7 @@ export default function Checkout() {
         key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "",
         email: data.order.email,
         amount: Math.round(Number(data.order.amount) * 100),
-        currency: "GHS", // Ghanaian Cedis - change to "NGN" if your account doesn't support GHS
+        currency: "NGN", // Nigerian Naira (most Paystack accounts support this)
         ref: data.order.paystackReference,
         onClose: () => {
           setIsProcessingPayment(false);
@@ -158,7 +158,7 @@ export default function Checkout() {
             <p>
               <span className="text-muted-foreground">Amount:</span>{" "}
               <strong className="ml-2 rounded bg-foreground px-2 py-0.5 text-primary">
-                GH¢{Number(pkg.price).toFixed(2)}
+                ₦{Number(pkg.price).toFixed(2)}
               </strong>
             </p>
           </div>
@@ -213,7 +213,7 @@ export default function Checkout() {
                 disabled={isProcessingPayment}
                 data-testid="button-pay"
               >
-                {isProcessingPayment ? "Processing..." : `Pay GH¢${Number(pkg.price).toFixed(2)}`}
+                {isProcessingPayment ? "Processing..." : `Pay ₦${Number(pkg.price).toFixed(2)}`}
               </Button>
               <p className="text-center text-xs text-muted-foreground">
                 Secure payment powered by Paystack

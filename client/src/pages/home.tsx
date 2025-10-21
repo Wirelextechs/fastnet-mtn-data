@@ -64,7 +64,7 @@ export default function Home() {
                 </p>
                 <div className="inline-block rounded bg-foreground px-3 py-1.5">
                   <span className="text-lg font-extrabold text-primary sm:text-xl">
-                    GH¢{Number(pkg.price).toFixed(0)}
+                    ₦{Number(pkg.price).toFixed(0)}
                   </span>
                 </div>
               </button>

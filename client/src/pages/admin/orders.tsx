@@ -183,7 +183,7 @@ export default function AdminOrders() {
                       <TableCell className="font-medium">{order.package?.dataAmount}</TableCell>
                       <TableCell>{order.phoneNumber}</TableCell>
                       <TableCell>{order.email}</TableCell>
-                      <TableCell>GH¢{Number(order.amount).toFixed(2)}</TableCell>
+                      <TableCell>₦{Number(order.amount).toFixed(2)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5">
                           <span
