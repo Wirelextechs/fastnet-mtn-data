@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastNet - Instant MTN Packages</title>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <style>
+        /* CSS for a Premium, Clean, and Fast Look (MTN Colors) */
+
+        :root {
+            --mtn-yellow: #ffcb05;
+            --mtn-blue: #007bff;
+            --text-dark: #333;
+            --text-light: #fff;
+            --background-light: #f4f7f6;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* --- Header & Logo --- */
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            background-color: var(--text-dark);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .logo-text {
+            font-size: 2.5em;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin: 0;
+            color: var(--text-light);
+        }
+
+        .logo-text span {
+            color: var(--mtn-yellow);
+        }
+
+        .slogan {
+            margin: 5px 0 0 0;
+            font-size: 1em;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* --- Package Grid --- */
+        .package-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+        }
+
+        .package-card {
+            background: var(--text-light);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .package-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .package-card.selected {
+            border-color: var(--mtn-blue);
+            box-shadow: 0 0 0 4px var(--mtn-blue), var(--card-shadow);
+        }
+
+        .card-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--mtn-blue);
+            margin: 0 0 5px 0;
+        }
+
+        .card-subtitle {
+            font-size: 0.9em;
+            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .card-price {
+            font-size: 1.5em;
+            font-weight: 800;
+            color: var(--mtn-yellow);
+            background-color: var(--text-dark);
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            font-size: 1.5em;
+            color: var(--mtn-blue);
+            display: none;
+        }
+        .package-card.selected .checkmark {
+            display: block;
+        }
+
+        /* --- Action Button --- */
+        .action-button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 30px;
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--text-dark);
+            background-color: var(--mtn-yellow);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: var(--card-shadow);
+        }
+
+        .action-button:hover {
+            background-color: #ffda47;
+            transform: translateY(-1px);
+        }
+
+        .action-button:disabled {
+            background-color: #ccc;
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* --- Checkout Page (Hidden by Default) --- */
+        #checkout-view {
+            display: none; /* Initially hidden */
+            padding-top: 20px;
+        }
+
+        .summary-box {
+            background-color: var(--text-light);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+            border-left: 5px solid var(--mtn-blue);
+        }
+
+        .summary-box p {
+            margin: 5px 0;
+            font-size: 1.1em;
+        }
+        .summary-box strong {
+            color: var(--mtn-yellow);
+            background-color: var(--text-dark);
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+
+        .checkout-disclaimer {
+            font-size: 0.8em;
+            color: #666;
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        /* Utility for Mobile Responsiveness */
+        @media (max-width: 480px) {
+            .logo-text {
+                font-size: 2em;
+            }
+            .container {
+                padding: 10px;
+            }
+            .package-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1 class="logo-text">Fast<span>Net</span></h1>
+            <p class="slogan">NON-EXPIRY MTN DATA</p>
+        </div>
+
+        <div id="home-view">
+            <div class="package-grid">
+                
+                <div class="package-card" data-data="1GB" data-price="5" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">1GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢5</div>
+                </div>
+
+                <div class="package-card" data-data="2GB" data-price="10" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">2GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢10</div>
+                </div>
+
+                <div class="package-card" data-data="3GB" data-price="14" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">3GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢14</div>
+                </div>
+
+                <div class="package-card" data-data="4GB" data-price="21" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">4GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢21</div>
+                </div>
+
+                <div class="package-card" data-data="5GB" data-price="23" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">5GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢23</div>
+                </div>
+
+                <div class="package-card" data-data="6GB" data-price="30" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">6GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢30</div>
+                </div>
+
+                <div class="package-card" data-data="7GB" data-price="34" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">7GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢34</div>
+                </div>
+
+                <div class="package-card" data-data="8GB" data-price="38" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">8GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢38</div>
+                </div>
+
+                <div class="package-card" data-data="9GB" data-price="46" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">9GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢46</div>
+                </div>
+
+                <div class="package-card" data-data="10GB" data-price="45" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">10GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢45</div>
+                </div>
+
+                <div class="package-card" data-data="15GB" data-price="65" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">15GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢65</div>
+                </div>
+
+                <div class="package-card" data-data="20GB" data-price="88" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">20GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢88</div>
+                </div>
+
+                <div class="package-card" data-data="25GB" data-price="115" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">25GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢115</div>
+                </div>
+
+                <div class="package-card" data-data="30GB" data-price="132" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">30GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢132</div>
+                </div>
+
+                <div class="package-card" data-data="40GB" data-price="175" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">40GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢175</div>
+                </div>
+
+                <div class="package-card" data-data="50GB" data-price="223" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">50GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢223</div>
+                </div>
+
+                <div class="package-card" data-data="100GB" data-price="412" onclick="selectPackage(this)">
+                    <span class="checkmark">✔</span>
+                    <h2 class="card-title">100GB</h2>
+                    <p class="card-subtitle">Non-Expiry</p>
+                    <div class="card-price">GH¢412</div>
+                </div>
+                
+            </div>
+
+            <button id="select-button" class="action-button" onclick="goToCheckout()" disabled>
+                Proceed to Checkout
+            </button>
+        </div>
+
+        <div id="checkout-view">
+            <div class="summary-box">
+                <p>Selected Package: <span id="summary-data"></span></p>
+                <p>Total Cost: <strong>GH¢<span id="summary-price"></span></strong></p>
+            </div>
+
+            <div class="form-group">
+                <label for="customer-email">Your Email Address (for receipt and contact)</label>
+                <input type="email" id="customer-email" placeholder="Enter Email Address" required>
+            </div>
+
+            <div class="form-group">
+                <label for="beneficiary-number">MTN Beneficiary Number (e.g., 024xxxxxxx)</label>
+                <input type="tel" id="beneficiary-number" placeholder="Enter MTN Number" required>
+            </div>
+
+            <button class="action-button" onclick="initiatePayment()">
+                Pay Now
+            </button>
+            
+            <p class="checkout-disclaimer">
+                Note: Payment will be processed securely on the next screen. This action initiates the API call.
+            </p>
+            
+            <button class="action-button" style="background-color: #6c757d; margin-top: 10px;" onclick="goToHome()">
+                &lt; Change Package
+            </button>
+
+        </div>
+    </div>
+
+    <script>
+        // *** CRITICAL FIX: The Live Public Key is hardcoded here to bypass the failing server call (404 Not Found) ***
+        let PAYSTACK_PUBLIC_KEY = 'pk_live_574b7f2d8e5798fcab3221d292ef5fa8d28c204e'; 
+        let selectedPackage = null;
+
+        // The problematic fetch('/config') block has been REMOVED.
+
+        /**
+         * Step 1: Handle package selection on the home page.
+         */
+        function selectPackage(element) {
+            // Remove 'selected' class from all cards
+            document.querySelectorAll('.package-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            // Add 'selected' class to the clicked card
+            element.classList.add('selected');
+            
+            // Store the data and enable the button (convert price to number)
+            selectedPackage = {
+                data: element.dataset.data,
+                price: parseFloat(element.dataset.price)
+            };
+            document.getElementById('select-button').disabled = false;
+        }
+
+        /**
+         * Step 2: Navigate from Home to Checkout page.
+         */
+        function goToCheckout() {
+            if (!selectedPackage) return;
+
+            // Update summary details on the checkout page
+            document.getElementById('summary-data').textContent = selectedPackage.data + ' Non-Expiry Data';
+            document.getElementById('summary-price').textContent = selectedPackage.price;
+
+            // Toggle view visibility
+            document.getElementById('home-view').style.display = 'none';
+            document.getElementById('checkout-view').style.display = 'block';
+            
+            // Scroll to the top of the new view
+            window.scrollTo(0, 0);
+        }
+
+        /**
+         * Step 3: Navigate from Checkout back to Home.
+         */
+        function goToHome() {
+            document.getElementById('checkout-view').style.display = 'none';
+            document.getElementById('home-view').style.display = 'block';
+            // Clear the number field for a new attempt
+            document.getElementById('beneficiary-number').value = '';
+            document.getElementById('customer-email').value = ''; // Clear email too
+        }
+
+
+        /**
+         * STEP 4: The critical function for API integration.
+         */
+        function initiatePayment() {
+            const beneficiaryNumber = document.getElementById('beneficiary-number').value.trim();
+            const customerEmail = document.getElementById('customer-email').value.trim();
+            
+            if (!customerEmail || !customerEmail.includes('@')) {
+                alert('Please enter a valid Email Address.');
+                return;
+            }
+
+            // Simple check for a typical 10-digit Ghanaian number (02/05 prefix)
+            if (!/^(02|05)\d{8}$/.test(beneficiaryNumber)) {
+                alert('Please enter a valid 10-digit MTN Beneficiary Number (e.g., 024xxxxxxx or 054xxxxxxx).');
+                return;
+            }
+
+            if (!selectedPackage) {
+                alert('An error occurred. Please select a package again.');
+                goToHome();
+                return;
+            }
+            
+            if (!PAYSTACK_PUBLIC_KEY) {
+                 alert('Configuration Error: Paystack Public Key is missing.');
+                 return;
+            }
+
+            console.log('--- Submitting Order to Backend ---');
+
+            // 1. Send secure POST request to your backend server's /initialize endpoint
+            fetch('/initialize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    // Use the captured email
+                    email: customerEmail, 
+                    // Send amount in the base currency (GHS)
+                    amount: selectedPackage.price,
+                    metadata: {
+                        beneficiaryNumber: beneficiaryNumber,
+                        packageData: selectedPackage.data
+                    }
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // This handles non-200 responses from your server
+                    throw new Error(`Server initialization failed with status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status && data.data.reference) {
+
+                    // 2. Use PaystackPop to handle the payment modal
+                    // Calculate amount in pesewas (smallest unit for GHS)
+                    const amountInPesewas = selectedPackage.price * 100;
+                    
+                    let handler = PaystackPop.setup({
+                        key: PAYSTACK_PUBLIC_KEY, 
+                        // Use the captured email
+                        email: customerEmail, 
+                        amount: amountInPesewas, 
+                        ref: data.data.reference,
+                        currency: 'GHS', 
+                        metadata: {
+                            custom_fields: [
+                                { display_name: "Beneficiary", variable_name: "beneficiary", value: beneficiaryNumber }
+                            ]
+                        },
+                        onClose: function(){
+                            console.log('Payment window closed by user.');
+                        },
+                        callback: function(response){
+                            const reference = response.reference;
+                            // 3. Redirect to your server's /verify endpoint after success
+                            window.location.href = `/verify/${reference}`; 
+                        }
+                    });
+                    handler.openIframe();
+
+                } else {
+                    alert('Error initiating payment. Paystack initialization failed.');
+                    console.error('Backend response failed:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Network or Server Error:', error);
+                alert('An unexpected error occurred: ' + error.message);
+            });
+        }
+    </script>
+</body>
+</html>
