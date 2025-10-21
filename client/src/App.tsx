@@ -15,8 +15,6 @@ import AdminOrders from "@/pages/admin/orders";
 import AdminPackages from "@/pages/admin/packages";
 
 function Router() {
-  const { isAdmin } = useAuth();
-
   return (
     <Switch>
       {/* Public customer routes */}
@@ -24,14 +22,10 @@ function Router() {
       <Route path="/checkout/:packageId" component={Checkout} />
       <Route path="/confirmation/:reference" component={Confirmation} />
 
-      {/* Admin routes */}
-      {isAdmin && (
-        <>
-          <Route path="/admin" component={AdminDashboard} />
-          <Route path="/admin/orders" component={AdminOrders} />
-          <Route path="/admin/packages" component={AdminPackages} />
-        </>
-      )}
+      {/* Admin routes - pages handle auth redirect */}
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/orders" component={AdminOrders} />
+      <Route path="/admin/packages" component={AdminPackages} />
 
       {/* Fallback to 404 */}
       <Route component={NotFound} />
@@ -61,7 +55,7 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 }
 
 function AppContent() {
-  const { isAdmin, isLoading } = useAuth();
+  const { isAdmin, isLoading, isAuthenticated } = useAuth();
   const currentPath = window.location.pathname;
   const isAdminRoute = currentPath.startsWith("/admin");
 
@@ -78,7 +72,35 @@ function AppContent() {
     );
   }
 
-  if (isAdminRoute && isAdmin) {
+  // Handle admin route access
+  if (isAdminRoute) {
+    if (!isAuthenticated) {
+      // Redirect to login
+      window.location.href = "/api/login";
+      return null;
+    }
+    
+    if (!isAdmin) {
+      // Authenticated but not admin - show access denied
+      return (
+        <div className="flex h-screen items-center justify-center bg-background">
+          <div className="max-w-md text-center">
+            <h1 className="mb-4 text-2xl font-bold">Access Denied</h1>
+            <p className="mb-6 text-muted-foreground">
+              You don't have permission to access the admin panel.
+            </p>
+            <button
+              onClick={() => (window.location.href = "/")}
+              className="rounded bg-primary px-4 py-2 font-semibold text-primary-foreground"
+            >
+              Go to Homepage
+            </button>
+          </div>
+        </div>
+      );
+    }
+    
+    // Authenticated and admin - show admin layout
     return (
       <AdminLayout>
         <Router />
