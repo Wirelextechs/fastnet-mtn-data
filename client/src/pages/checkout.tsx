@@ -49,9 +49,10 @@ export default function Checkout() {
 
   const createOrderMutation = useMutation({
     mutationFn: async (data: InsertOrder) => {
-      return await apiRequest<{ order: any; authorizationUrl: string }>("POST", "/api/orders", data);
+      const res = await apiRequest("POST", "/api/orders", data);
+      return await res.json();
     },
-    onSuccess: (response) => {
+    onSuccess: (data: { order: any; authorizationUrl: string }) => {
       if (!window.PaystackPop) {
         toast({
           title: "Error",
@@ -64,9 +65,9 @@ export default function Checkout() {
 
       const handler = window.PaystackPop.setup({
         key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "",
-        email: response.order.email,
-        amount: Math.round(Number(response.order.amount) * 100),
-        ref: response.order.paystackReference,
+        email: data.order.email,
+        amount: Math.round(Number(data.order.amount) * 100),
+        ref: data.order.paystackReference,
         onClose: () => {
           setIsProcessingPayment(false);
           toast({
