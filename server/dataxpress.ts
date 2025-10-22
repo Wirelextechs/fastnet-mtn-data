@@ -245,7 +245,9 @@ export async function getCostPrice(
   }
 
   try {
-    const volumeInMB = parseDataAmount(dataAmount);
+    // DataXpress API naming is confusing: "volumeInMB" expects package SIZE number
+    // e.g., for "5GB" package, send volumeInMB: 5 (not 5120)
+    const packageSize = extractPackageSize(dataAmount);
 
     const response = await fetch(`${DATAXPRESS_BASE_URL}/api/get-cost-price`, {
       method: "POST",
@@ -254,7 +256,7 @@ export async function getCostPrice(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        volumeInMB,
+        volumeInMB: packageSize, // Send package number (e.g., 5 for "5GB")
         networkType: "mtn",
       }),
     });
@@ -268,8 +270,8 @@ export async function getCostPrice(
       };
     }
 
-    // DataXpress returns cost price in the data object
-    const costPrice = result.data?.cost_price || result.data?.costPrice || result.data?.price;
+    // DataXpress returns cost_price in the response
+    const costPrice = result.data?.cost_price;
     
     if (costPrice === undefined) {
       return {
