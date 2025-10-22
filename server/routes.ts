@@ -266,12 +266,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate Paystack reference
       const reference = `FS-${Date.now()}-${randomUUID().substring(0, 8)}`;
       
+      // Calculate 1.18% convenience fee
+      const packagePrice = parseFloat(pkg.price);
+      const fee = packagePrice * 0.0118; // 1.18% fee
+      const totalAmount = packagePrice + fee;
+      
       // Create order with server-determined amount and status
       const order = await storage.createOrder({
         packageId: pkg.id,
         phoneNumber,
         email,
-        amount: pkg.price, // Use price from database, not client
+        amount: pkg.price, // Package price (base amount)
+        fee: fee.toFixed(2), // 1.18% convenience fee
+        totalAmount: totalAmount.toFixed(2), // Total amount customer pays
         paystackReference: reference,
         status: "pending", // Always start as pending
       });

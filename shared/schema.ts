@@ -66,7 +66,9 @@ export const orders = pgTable("orders", {
   packageId: varchar("package_id").notNull().references(() => packages.id),
   phoneNumber: varchar("phone_number").notNull(),
   email: varchar("email").notNull(),
-  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(), // Package price (base amount)
+  fee: decimal("fee", { precision: 10, scale: 2 }).notNull().default("0"), // 1.18% convenience fee
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull().default("0"), // amount + fee (what customer pays)
   paystackReference: varchar("paystack_reference"),
   status: varchar("status").notNull().default("pending"), // pending, processing, completed, failed
   fulfillmentStatus: varchar("fulfillment_status").default("pending"), // pending, processing, fulfilled, failed
