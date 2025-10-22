@@ -213,3 +213,63 @@ export async function checkOrderStatus(
     };
   }
 }
+
+/**
+ * Get real-time cost price from DataXpress for a specific data volume
+ */
+export async function getCostPrice(
+  dataAmount: string
+): Promise<{ success: boolean; costPrice?: number; message?: string }> {
+  if (!API_KEY) {
+    return {
+      success: false,
+      message: "DataXpress API key not configured",
+    };
+  }
+
+  try {
+    const volumeInMB = parseDataAmount(dataAmount);
+
+    const response = await fetch(`${DATAXPRESS_BASE_URL}/api/get-cost-price`, {
+      method: "POST",
+      headers: {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        volumeInMB,
+        networkType: "mtn",
+      }),
+    });
+
+    const result: DataXpressResponse = await response.json();
+
+    if (!response.ok || result.status !== "success") {
+      return {
+        success: false,
+        message: result.message || "Failed to fetch cost price",
+      };
+    }
+
+    // DataXpress returns cost price in the data object
+    const costPrice = result.data?.cost_price || result.data?.costPrice || result.data?.price;
+    
+    if (costPrice === undefined) {
+      return {
+        success: false,
+        message: "Cost price not found in response",
+      };
+    }
+
+    return {
+      success: true,
+      costPrice: parseFloat(costPrice),
+    };
+  } catch (error) {
+    console.error(`❌ Failed to fetch cost price:`, error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}

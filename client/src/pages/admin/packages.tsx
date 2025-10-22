@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
 const packageSchema = z.object({
@@ -179,6 +179,37 @@ export default function AdminPackages() {
     },
   });
 
+  const syncPricingMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/packages/sync-pricing", {});
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/packages"] });
+      toast({
+        title: "Pricing Synced",
+        description: data.message || "Supplier costs updated from DataXpress",
+      });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Sync Failed",
+        description: error.message || "Failed to sync pricing from DataXpress",
+        variant: "destructive",
+      });
+    },
+  });
+
   if (isAuthLoading || !isAuthenticated) {
     return null;
   }
@@ -233,10 +264,21 @@ export default function AdminPackages() {
           <h1 className="text-3xl font-bold">Package Management</h1>
           <p className="text-muted-foreground">Add, edit, or remove data packages</p>
         </div>
-        <Button onClick={handleAddNew} data-testid="button-add-package">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Package
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => syncPricingMutation.mutate()}
+            disabled={syncPricingMutation.isPending}
+            data-testid="button-sync-pricing"
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${syncPricingMutation.isPending ? 'animate-spin' : ''}`} />
+            {syncPricingMutation.isPending ? "Syncing..." : "Sync Pricing"}
+          </Button>
+          <Button onClick={handleAddNew} data-testid="button-add-package">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Package
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (

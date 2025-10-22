@@ -6,7 +6,7 @@ import { insertPackageSchema, insertOrderSchema } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { initializeDatabase } from "./init";
-import { purchaseDataBundle, getWalletBalance } from "./dataxpress";
+import { purchaseDataBundle, getWalletBalance, getCostPrice } from "./dataxpress";
 
 /**
  * Fulfill an order by sending data to customer via DataXpress
@@ -155,6 +155,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting package:", error);
       res.status(500).json({ message: "Failed to delete package" });
+    }
+  });
+
+  // Sync supplier costs from DataXpress real-time pricing
+  app.post("/api/packages/sync-pricing", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      console.log("🔄 Starting DataXpress pricing sync...");
+      const packages = await storage.getAllPackages();
+      
+      const results = {
+        total: packages.length,
+        updated: 0,
+        failed: 0,
+        errors: [] as string[],
+      };
+
+      for (const pkg of packages) {
+        try {
+          console.log(`📊 Fetching cost for ${pkg.dataAmount}...`);
+          const priceResult = await getCostPrice(pkg.dataAmount);
+          
+          if (priceResult.success && priceResult.costPrice !== undefined) {
+            // Update package with real-time cost from DataXpress
+            await storage.updatePackage(pkg.id, {
+              supplierCost: priceResult.costPrice.toFixed(2),
+            });
+            console.log(`✅ Updated ${pkg.dataAmount}: GH₵${priceResult.costPrice.toFixed(2)}`);
+            results.updated++;
+          } else {
+            console.warn(`⚠️  Failed to get cost for ${pkg.dataAmount}: ${priceResult.message}`);
+            results.failed++;
+            results.errors.push(`${pkg.dataAmount}: ${priceResult.message}`);
+          }
+        } catch (error: any) {
+          console.error(`❌ Error syncing ${pkg.dataAmount}:`, error);
+          results.failed++;
+          results.errors.push(`${pkg.dataAmount}: ${error.message}`);
+        }
+      }
+
+      console.log(`✅ Pricing sync complete: ${results.updated} updated, ${results.failed} failed`);
+      
+      res.json({
+        message: `Synced ${results.updated} packages successfully`,
+        results,
+      });
+    } catch (error: any) {
+      console.error("Error syncing pricing:", error);
+      res.status(500).json({ message: error.message || "Failed to sync pricing" });
     }
   });
 
