@@ -20,6 +20,23 @@ function parseDataAmount(dataAmount: string): number {
   return parseInt(match[1]) * 1024; // Convert GB to MB
 }
 
+/**
+ * Extract package size number from data amount string
+ * Note: DataXpress API has confusing naming - their "volumeInMB" field
+ * actually expects the package SIZE NUMBER, not actual megabytes!
+ * Example: "5GB" → 5 (not 5120)
+ * 
+ * @param dataAmount - Package size like "1GB", "5GB", "10GB"
+ * @returns Package number (e.g., 5 for "5GB")
+ */
+function extractPackageSize(dataAmount: string): number {
+  const match = dataAmount.match(/^(\d+)GB$/);
+  if (!match) {
+    throw new Error(`Invalid data amount format: ${dataAmount}`);
+  }
+  return parseInt(match[1]); // Return just the number (e.g., "5GB" → 5)
+}
+
 interface DataXpressOrderRequest {
   ref: string;
   phone: string;
