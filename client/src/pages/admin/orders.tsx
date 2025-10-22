@@ -203,6 +203,8 @@ export default function AdminOrders() {
                     <TableHead>Phone</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Amount</TableHead>
+                    <TableHead>Fee</TableHead>
+                    <TableHead>Total</TableHead>
                     <TableHead>Payment</TableHead>
                     <TableHead>Fulfillment</TableHead>
                     <TableHead>Date</TableHead>
@@ -219,7 +221,9 @@ export default function AdminOrders() {
                         <TableCell className="font-medium">{order.package?.dataAmount}</TableCell>
                         <TableCell>{order.phoneNumber}</TableCell>
                         <TableCell>{order.email}</TableCell>
-                        <TableCell>GH¢{Number(order.amount).toFixed(2)}</TableCell>
+                        <TableCell>GH₵{Number(order.amount).toFixed(2)}</TableCell>
+                        <TableCell className="text-muted-foreground">GH₵{Number(order.fee || 0).toFixed(2)}</TableCell>
+                        <TableCell className="font-semibold">GH₵{Number(order.totalAmount || order.amount).toFixed(2)}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1.5">
                             <span
