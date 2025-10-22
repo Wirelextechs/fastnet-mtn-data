@@ -61,6 +61,10 @@ interface WalletBalanceData {
 
 /**
  * Purchase a data bundle via DataXpress
+ * @param phoneNumber - Customer's phone number
+ * @param dataAmount - Package size like "5GB"
+ * @param price - Supplier cost (wholesale price, NOT customer price)
+ * @param orderReference - Unique order reference
  */
 export async function purchaseDataBundle(
   phoneNumber: string,
@@ -76,20 +80,23 @@ export async function purchaseDataBundle(
   }
 
   try {
-    const volumeInMB = parseDataAmount(dataAmount);
+    // DataXpress API naming is confusing: "volumeInMB" expects package SIZE number
+    // e.g., for "5GB" package, send volumeInMB: 5 (not 5120)
+    const packageSize = extractPackageSize(dataAmount);
 
     const requestBody: DataXpressOrderRequest = {
       ref: orderReference,
       phone: phoneNumber,
-      volumeInMB,
-      amount: price,
+      volumeInMB: packageSize, // Send package number (e.g., 5 for "5GB")
+      amount: price, // Supplier cost (wholesale price)
       networkType: "mtn", // Currently only supporting MTN
     };
 
     console.log(`📡 Sending data order to DataXpress:`, {
       phone: phoneNumber,
       dataAmount: dataAmount,
-      price: price,
+      packageSize: packageSize,
+      supplierCost: price,
       ref: orderReference,
     });
 
