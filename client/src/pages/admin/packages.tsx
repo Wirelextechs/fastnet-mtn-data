@@ -26,8 +26,11 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 
 const packageSchema = z.object({
   dataAmount: z.string().min(1, "Data amount is required"),
-  price: z.string().min(1, "Price is required").refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
-    message: "Price must be a positive number",
+  price: z.string().min(1, "Customer price is required").refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+    message: "Customer price must be a positive number",
+  }),
+  supplierCost: z.string().min(1, "Supplier cost is required").refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+    message: "Supplier cost must be a positive number",
   }),
   isActive: z.boolean().default(true),
 });
@@ -72,6 +75,7 @@ export default function AdminPackages() {
     defaultValues: {
       dataAmount: "",
       price: "",
+      supplierCost: "",
       isActive: true,
     },
   });
@@ -184,6 +188,7 @@ export default function AdminPackages() {
     form.reset({
       dataAmount: pkg.dataAmount,
       price: pkg.price,
+      supplierCost: pkg.supplierCost,
       isActive: pkg.isActive,
     });
     setIsDialogOpen(true);
@@ -194,6 +199,7 @@ export default function AdminPackages() {
     form.reset({
       dataAmount: "",
       price: "",
+      supplierCost: "",
       isActive: true,
     });
     setIsDialogOpen(true);
@@ -203,6 +209,7 @@ export default function AdminPackages() {
     const packageData: InsertPackage = {
       dataAmount: data.dataAmount,
       price: data.price,
+      supplierCost: data.supplierCost,
       isActive: data.isActive,
     };
 
@@ -283,11 +290,23 @@ export default function AdminPackages() {
                     GH¢{Number(pkg.price).toFixed(0)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Status:</span>
-                  <span className={pkg.isActive ? "text-chart-3 font-semibold" : "text-muted-foreground"}>
-                    {pkg.isActive ? "Active" : "Inactive"}
-                  </span>
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Supplier Cost:</span>
+                    <span className="font-medium">GH¢{Number(pkg.supplierCost).toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Profit:</span>
+                    <span className="font-medium text-chart-3">
+                      GH¢{(Number(pkg.price) - Number(pkg.supplierCost)).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Status:</span>
+                    <span className={pkg.isActive ? "text-chart-3 font-semibold" : "text-muted-foreground"}>
+                      {pkg.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -324,7 +343,7 @@ export default function AdminPackages() {
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price (GH¢)</FormLabel>
+                    <FormLabel>Customer Price (GH¢)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -334,6 +353,26 @@ export default function AdminPackages() {
                         data-testid="input-price"
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="supplierCost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Supplier Cost (GH¢)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="e.g., 16.10"
+                        {...field}
+                        data-testid="input-supplier-cost"
+                      />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">Wholesale price from DataXpress</p>
                     <FormMessage />
                   </FormItem>
                 )}

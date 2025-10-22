@@ -37,11 +37,11 @@ async function fulfillOrder(orderId: string): Promise<void> {
 
     console.log(`🚀 Fulfilling order ${orderId}: ${pkg.dataAmount} to ${order.phoneNumber}`);
 
-    // Send to DataXpress
+    // Send to DataXpress using supplier cost (wholesale price)
     const result = await purchaseDataBundle(
       order.phoneNumber,
       pkg.dataAmount,
-      parseFloat(pkg.price),
+      parseFloat(pkg.supplierCost),
       order.paystackReference || order.id
     );
 
