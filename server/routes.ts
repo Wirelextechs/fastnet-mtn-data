@@ -303,25 +303,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const event = req.body;
       
+      console.log("🔔 Paystack webhook received:", {
+        event: event.event,
+        reference: event.data?.reference,
+        timestamp: new Date().toISOString()
+      });
+      
       // Verify webhook signature (implement proper verification in production)
       if (event.event === "charge.success") {
         const reference = event.data.reference;
         
+        console.log(`✅ Payment successful for reference: ${reference}`);
+        
         // Update order status to completed and fulfill automatically
         const order = await storage.getOrderByReference(reference);
         if (order) {
+          console.log(`📦 Order found: ${order.id}, updating to completed and fulfilling...`);
+          
           await storage.updateOrder(order.id, { status: "completed" });
           
           // Trigger automatic fulfillment (don't wait for it to complete)
           fulfillOrder(order.id).catch((error) => {
-            console.error(`Failed to fulfill order ${order.id}:`, error);
+            console.error(`❌ Failed to fulfill order ${order.id}:`, error);
           });
+          
+          console.log(`✅ Order ${order.id} marked completed and sent for fulfillment`);
+        } else {
+          console.warn(`⚠️ No order found for reference: ${reference}`);
         }
+      } else {
+        console.log(`ℹ️ Ignoring webhook event: ${event.event}`);
       }
       
       res.json({ message: "Webhook received" });
     } catch (error) {
-      console.error("Error processing webhook:", error);
+      console.error("❌ Error processing webhook:", error);
       res.status(500).json({ message: "Failed to process webhook" });
     }
   });
