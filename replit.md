@@ -143,10 +143,29 @@ The application integrates with DataXpress API for automatic MTN data delivery:
 ### Environment Variables
 - `DATAXPRESS_API_KEY` - Stored in Replit Secrets for secure API access
 
+### API Endpoints & Quirks
+
+#### Buy Data: POST /api/buy-data
+- Purchases and delivers data to customer's phone
+- **Important**: `volumeInMB` field expects package SIZE number (e.g., 5 for "5GB"), NOT actual megabytes
+- Example: For "5GB" package, send `volumeInMB: 5` (not 5120)
+
+#### Get Cost Price: POST /api/get-cost-price
+- Fetches real-time wholesale pricing from DataXpress
+- **Important**: `volumeInMB` field expects package SIZE number (same as buy-data)
+- Response format: `{ "status": "success", "cost_price": 22.00, ... }` (cost_price at root level)
+- Example: For "5GB" package, send `volumeInMB: 5` → returns `cost_price: 22.00`
+
+#### Supported Packages (as of Oct 2025)
+DataXpress supports: **1GB, 2GB, 3GB, 4GB, 5GB, 6GB, 8GB, 10GB, 15GB, 20GB, 25GB, 30GB, 40GB, 50GB, 100GB**
+
+**NOT supported**: 7GB, 9GB (returns "Invalid data package selected for this network")
+
 ### API Features
 - **Automatic Fulfillment**: When payment is confirmed, data is automatically sent to customer's phone
 - **Manual Fulfillment**: Admins can manually trigger fulfillment from orders page (Send icon)
 - **Wallet Balance**: Real-time balance display in admin dashboard (refreshes every 30s)
+- **Pricing Sync**: "Sync Pricing" button fetches real-time wholesale costs for all packages
 - **Fulfillment Status**: Tracks pending, processing, fulfilled, or failed status for each order
 - **Error Handling**: Failed fulfillments show error messages in admin panel for troubleshooting
 
@@ -172,6 +191,11 @@ Orders now include fulfillment tracking fields:
 - Support for other networks (Vodafone, AirtelTigo, Telecel)
 
 ## Recent Changes
+- October 22, 2025: Real-time pricing sync from DataXpress API
+  - Fixed DataXpress volumeInMB parameter (expects package size number, not actual MB)
+  - Fixed response parsing (cost_price at root level, not in data object)
+  - Added "Sync Pricing" button to admin packages page
+  - Supports 15 out of 17 packages (7GB and 9GB not available from DataXpress)
 - October 21, 2025: Initial implementation with full MVP features
 - October 21, 2025: DataXpress integration for automatic order fulfillment
 - Security hardening: Server-side pricing, schema validation, real-time polling
