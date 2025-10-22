@@ -268,7 +268,7 @@ export async function getCostPrice(
       }),
     });
 
-    const result: DataXpressResponse = await response.json();
+    const result: any = await response.json();
 
     if (!response.ok || result.status !== "success") {
       return {
@@ -277,8 +277,8 @@ export async function getCostPrice(
       };
     }
 
-    // DataXpress returns cost_price in the response
-    const costPrice = result.data?.cost_price;
+    // DataXpress returns cost_price at the root level (not in data object)
+    const costPrice = result.cost_price;
     
     if (costPrice === undefined) {
       return {
