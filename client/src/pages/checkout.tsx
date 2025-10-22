@@ -66,7 +66,7 @@ export default function Checkout() {
       const handler = window.PaystackPop.setup({
         key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "",
         email: data.order.email,
-        amount: Math.round(Number(data.order.amount) * 100),
+        amount: Math.round(Number(data.order.totalAmount) * 100), // Use totalAmount (includes fee)
         currency: "GHS", // Ghanaian Cedis
         ref: data.order.paystackReference,
         onClose: () => {
@@ -155,12 +155,20 @@ export default function Checkout() {
                 {pkg.dataAmount}
               </strong>
             </p>
-            <p>
-              <span className="text-muted-foreground">Amount:</span>{" "}
-              <strong className="ml-2 rounded bg-foreground px-2 py-0.5 text-primary">
-                GH¢{Number(pkg.price).toFixed(2)}
-              </strong>
-            </p>
+            <div className="mt-4 space-y-1.5 border-t pt-3">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Package Price:</span>
+                <span className="font-medium">GH₵{Number(pkg.price).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Convenience Fee (1.18%):</span>
+                <span className="font-medium">GH₵{(Number(pkg.price) * 0.0118).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between border-t pt-2 text-lg font-bold">
+                <span>Total Amount:</span>
+                <span className="text-primary">GH₵{(Number(pkg.price) * 1.0118).toFixed(2)}</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -213,7 +221,7 @@ export default function Checkout() {
                 disabled={isProcessingPayment}
                 data-testid="button-pay"
               >
-                {isProcessingPayment ? "Processing..." : `Pay GH¢${Number(pkg.price).toFixed(2)}`}
+                {isProcessingPayment ? "Processing..." : `Pay GH₵${(Number(pkg.price) * 1.0118).toFixed(2)}`}
               </Button>
               <p className="text-center text-xs text-muted-foreground">
                 Secure payment powered by Paystack
