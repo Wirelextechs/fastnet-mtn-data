@@ -44,7 +44,8 @@ export type User = typeof users.$inferSelect;
 export const packages = pgTable("packages", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   dataAmount: varchar("data_amount").notNull(), // e.g., "1GB", "5GB"
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(), // in GH¢
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(), // Customer price in GH¢
+  supplierCost: decimal("supplier_cost", { precision: 10, scale: 2 }).notNull(), // Wholesale cost from DataXpress in GH¢
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
