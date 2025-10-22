@@ -46,7 +46,7 @@ export default function AdminDashboard() {
   }
 
   const totalOrders = orders?.length || 0;
-  const totalRevenue = orders?.reduce((sum, order) => sum + Number(order.amount), 0) || 0;
+  const totalRevenue = orders?.reduce((sum, order) => sum + Number(order.totalAmount || order.amount), 0) || 0;
   const pendingOrders = orders?.filter((o) => o.status === "pending").length || 0;
   const completedOrders = orders?.filter((o) => o.status === "completed").length || 0;
 
