@@ -14,9 +14,10 @@ FastNet is a premium MTN data package sales platform built with React, Express, 
 
 ### Customer Features
 1. **Package Selection**: Browse and select from 17 MTN data packages (1GB to 100GB)
-2. **Secure Checkout**: Enter phone number and email with client-side validation
-3. **Paystack Payment**: Secure payment processing with Paystack inline SDK
-4. **Order Confirmation**: View order details and transaction reference after payment
+2. **Transparent Pricing**: 1.18% convenience fee clearly displayed at checkout
+3. **Secure Checkout**: Enter phone number and email with client-side validation
+4. **Paystack Payment**: Secure payment processing with Paystack inline SDK
+5. **Order Confirmation**: View order details and transaction reference after payment
 
 ### Admin Features
 1. **Dashboard Overview**: View statistics (total orders, revenue, pending, completed)
@@ -55,9 +56,14 @@ FastNet is a premium MTN data package sales platform built with React, Express, 
    - id (varchar, primary key)
    - packageId (foreign key to packages)
    - phoneNumber, email
-   - amount (decimal) - Server-determined from package price
+   - amount (decimal) - Package price (base amount)
+   - fee (decimal) - 1.18% convenience fee
+   - totalAmount (decimal) - Total customer pays (amount + fee)
    - paystackReference (varchar) - Paystack transaction reference
    - status (varchar) - pending, processing, completed, failed
+   - fulfillmentStatus (varchar) - pending, processing, fulfilled, failed
+   - fulfillmentError (text) - Error message if fulfillment fails
+   - dataxpressReference (varchar) - DataXpress order reference
    - createdAt, updatedAt
 
 4. **sessions** - Session storage (Replit Auth requirement)
@@ -127,15 +133,30 @@ UPDATE users SET is_admin = true WHERE email = 'user@example.com';
 
 **Note**: The automatic admin promotion only works for the very first user when the database has no existing admins. This ensures secure, controlled access to the admin panel.
 
+## Pricing & Fees
+The platform charges a **1.18% convenience fee** on all orders:
+- **Package Price**: Base price for the data package (e.g., GH₵5.00 for 5GB)
+- **Convenience Fee**: 1.18% of package price (e.g., GH₵0.06 for GH₵5.00)
+- **Total Amount**: Package price + fee (e.g., GH₵5.06 total)
+
+All three amounts are stored in the database and displayed transparently to customers at checkout. The fee is calculated server-side to prevent tampering.
+
+### Example Calculation
+For a 5GB package priced at GH₵5.00:
+- Package Price: GH₵5.00
+- Fee (1.18%): GH₵0.06 (5.00 × 0.0118)
+- Total: GH₵5.06
+
 ## Payment & Fulfillment Flow
 1. Customer selects package and enters contact info
 2. Frontend calls POST /api/orders (sends only packageId, phone, email)
-3. Backend fetches package, generates Paystack reference, creates order with server price
-4. Frontend receives order details and initializes Paystack inline SDK
-5. Customer completes payment with Paystack
-6. Paystack webhook updates order status to "completed"
-7. **Automatic fulfillment**: Order is sent to DataXpress API to deliver data to customer
-8. Order marked as "fulfilled" or "failed" with error message if delivery fails
+3. Backend fetches package, calculates 1.18% fee, creates order with server-determined pricing
+4. Frontend receives order details and displays fee breakdown
+5. Customer reviews total amount and proceeds to Paystack payment
+6. Customer completes payment with Paystack (charged totalAmount)
+7. Paystack webhook updates order status to "completed"
+8. **Automatic fulfillment**: Order is sent to DataXpress API to deliver data to customer
+9. Order marked as "fulfilled" or "failed" with error message if delivery fails
 
 ## DataXpress Integration
 The application integrates with DataXpress API for automatic MTN data delivery:
@@ -191,6 +212,13 @@ Orders now include fulfillment tracking fields:
 - Support for other networks (Vodafone, AirtelTigo, Telecel)
 
 ## Recent Changes
+- October 22, 2025: Added 1.18% convenience fee at checkout
+  - Added `fee` and `totalAmount` fields to orders table
+  - Backend calculates fee server-side (prevents tampering)
+  - Checkout displays transparent fee breakdown
+  - Admin orders page shows amount, fee, and total columns
+  - Dashboard revenue now uses totalAmount for accurate reporting
+  - Paystack charges totalAmount (base price + fee)
 - October 22, 2025: Real-time pricing sync from DataXpress API
   - Fixed DataXpress volumeInMB parameter (expects package size number, not actual MB)
   - Fixed response parsing (cost_price at root level, not in data object)
