@@ -41,6 +41,7 @@ async function fulfillOrder(orderId: string): Promise<void> {
     const result = await purchaseDataBundle(
       order.phoneNumber,
       pkg.dataAmount,
+      parseFloat(pkg.price),
       order.paystackReference || order.id
     );
 

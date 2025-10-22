@@ -24,6 +24,7 @@ interface DataXpressOrderRequest {
   ref: string;
   phone: string;
   volumeInMB: number;
+  amount: number;
   networkType: "mtn" | "telecel" | "tigo" | "airteltigo";
 }
 
@@ -47,6 +48,7 @@ interface WalletBalanceData {
 export async function purchaseDataBundle(
   phoneNumber: string,
   dataAmount: string,
+  price: number,
   orderReference: string
 ): Promise<{ success: boolean; message: string; data?: any }> {
   if (!API_KEY) {
@@ -63,12 +65,14 @@ export async function purchaseDataBundle(
       ref: orderReference,
       phone: phoneNumber,
       volumeInMB,
+      amount: price,
       networkType: "mtn", // Currently only supporting MTN
     };
 
     console.log(`📡 Sending data order to DataXpress:`, {
       phone: phoneNumber,
-      amount: dataAmount,
+      dataAmount: dataAmount,
+      price: price,
       ref: orderReference,
     });
 
