@@ -2,6 +2,7 @@ import {
   users,
   packages,
   orders,
+  settings,
   type User,
   type UpsertUser,
   type Package,
@@ -9,6 +10,8 @@ import {
   type Order,
   type InsertOrder,
   type OrderWithPackage,
+  type Setting,
+  type InsertSetting,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -17,6 +20,10 @@ export interface IStorage {
   // User operations - Required for Replit Auth
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  
+  // Settings operations
+  getSetting(key: string): Promise<Setting | undefined>;
+  upsertSetting(key: string, value: string): Promise<Setting>;
   
   // Package operations
   getAllPackages(): Promise<Package[]>;
@@ -54,6 +61,27 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  // Settings operations
+  async getSetting(key: string): Promise<Setting | undefined> {
+    const [setting] = await db.select().from(settings).where(eq(settings.key, key));
+    return setting;
+  }
+
+  async upsertSetting(key: string, value: string): Promise<Setting> {
+    const [setting] = await db
+      .insert(settings)
+      .values({ key, value })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: {
+          value,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return setting;
   }
 
   // Package operations

@@ -6,7 +6,8 @@ import { insertPackageSchema, insertOrderSchema } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { initializeDatabase } from "./init";
-import { purchaseDataBundle, getWalletBalance, getCostPrice } from "./dataxpress";
+import * as supplierManager from "./supplier-manager";
+import { getCostPrice as getDataXpressCostPrice } from "./dataxpress";
 
 /**
  * Fulfill an order by sending data to customer via DataXpress
@@ -37,11 +38,17 @@ async function fulfillOrder(orderId: string): Promise<void> {
 
     console.log(`🚀 Fulfilling order ${orderId}: ${pkg.dataAmount} to ${order.phoneNumber}`);
 
-    // Send to DataXpress using supplier cost (wholesale price)
-    const result = await purchaseDataBundle(
+    // Get active supplier and appropriate wholesale cost
+    const activeSupplier = await supplierManager.getActiveSupplierName();
+    const supplierCost = activeSupplier === "hubnet" && pkg.hubnetCost 
+      ? parseFloat(pkg.hubnetCost) 
+      : parseFloat(pkg.supplierCost);
+
+    // Send to active supplier using supplier cost (wholesale price)
+    const result = await supplierManager.purchaseDataBundle(
       order.phoneNumber,
       pkg.dataAmount,
-      parseFloat(pkg.supplierCost),
+      supplierCost,
       order.paystackReference || order.id
     );
 
@@ -50,16 +57,18 @@ async function fulfillOrder(orderId: string): Promise<void> {
       await storage.updateOrder(orderId, {
         fulfillmentStatus: "fulfilled",
         fulfillmentError: null,
-        dataxpressReference: result.data?.reference || order.paystackReference,
+        dataxpressReference: result.data?.reference || result.data?.transaction_id || order.paystackReference,
+        supplier: result.supplier,
       });
-      console.log(`✅ Order ${orderId} fulfilled successfully`);
+      console.log(`✅ Order ${orderId} fulfilled successfully via ${result.supplier}`);
     } else {
       // Mark as failed with error message
       await storage.updateOrder(orderId, {
         fulfillmentStatus: "failed",
         fulfillmentError: result.message,
+        supplier: result.supplier,
       });
-      console.error(`❌ Order ${orderId} fulfillment failed: ${result.message}`);
+      console.error(`❌ Order ${orderId} fulfillment failed via ${result.supplier}: ${result.message}`);
     }
   } catch (error: any) {
     console.error(`❌ Error fulfilling order ${orderId}:`, error);
@@ -174,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const pkg of packages) {
         try {
           console.log(`📊 Fetching cost for ${pkg.dataAmount}...`);
-          const priceResult = await getCostPrice(pkg.dataAmount);
+          const priceResult = await getDataXpressCostPrice(pkg.dataAmount);
           
           if (priceResult.success && priceResult.costPrice !== undefined) {
             // Update package with real-time cost from DataXpress
@@ -337,21 +346,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get DataXpress wallet balance
+  // Get wallet balance for both suppliers
   app.get("/api/wallet/balance", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const result = await getWalletBalance();
-      if (result.success) {
-        res.json({
-          balance: result.balance,
-          currency: result.currency,
-        });
-      } else {
-        res.status(500).json({ message: result.message || "Failed to fetch wallet balance" });
-      }
+      const [dataxpressResult, hubnetResult] = await Promise.all([
+        supplierManager.getWalletBalance("dataxpress"),
+        supplierManager.getWalletBalance("hubnet"),
+      ]);
+
+      res.json({
+        dataxpress: dataxpressResult.success ? {
+          balance: dataxpressResult.balance,
+          currency: dataxpressResult.currency,
+        } : null,
+        hubnet: hubnetResult.success ? {
+          balance: hubnetResult.balance,
+          currency: hubnetResult.currency,
+        } : null,
+      });
     } catch (error: any) {
-      console.error("Error fetching wallet balance:", error);
-      res.status(500).json({ message: error.message || "Failed to fetch wallet balance" });
+      console.error("Error fetching wallet balances:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch wallet balances" });
+    }
+  });
+
+  // Settings routes - Supplier management
+  app.get("/api/settings/supplier", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const activeSupplier = await supplierManager.getActiveSupplierName();
+      res.json({ activeSupplier });
+    } catch (error: any) {
+      console.error("Error fetching active supplier:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch active supplier" });
+    }
+  });
+
+  app.post("/api/settings/supplier", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const schema = z.object({
+        supplier: z.enum(["dataxpress", "hubnet"]),
+      });
+
+      const { supplier } = schema.parse(req.body);
+      await supplierManager.setActiveSupplier(supplier);
+      
+      res.json({ 
+        message: `Supplier switched to ${supplier}`,
+        activeSupplier: supplier,
+      });
+    } catch (error: any) {
+      console.error("Error switching supplier:", error);
+      res.status(400).json({ message: error.message || "Failed to switch supplier" });
     }
   });
 
