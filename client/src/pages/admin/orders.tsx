@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { OrderWithPackage } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -207,6 +208,7 @@ export default function AdminOrders() {
                     <TableHead>Total</TableHead>
                     <TableHead>Payment</TableHead>
                     <TableHead>Fulfillment</TableHead>
+                    <TableHead>Supplier</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -264,6 +266,15 @@ export default function AdminOrders() {
                               </span>
                             )}
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={order.supplier === "hubnet" ? "secondary" : "outline"}
+                            className="text-xs"
+                            data-testid={`badge-supplier-${order.id}`}
+                          >
+                            {order.supplier === "hubnet" ? "Hubnet" : "DataXpress"}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           {new Date(order.createdAt).toLocaleDateString()}

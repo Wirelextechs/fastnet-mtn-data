@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { Package, ShoppingCart, Clock, CheckCircle2, Wallet } from "lucide-react";
 import type { OrderWithPackage } from "@shared/schema";
 
@@ -34,10 +35,15 @@ export default function AdminDashboard() {
   });
 
   const { data: walletData, isLoading: isLoadingWallet } = useQuery<{
-    balance: string;
-    currency: string;
+    dataxpress: { balance: string; currency: string } | null;
+    hubnet: { balance: string; currency: string } | null;
   }>({
     queryKey: ["/api/wallet/balance"],
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  const { data: supplierSettings } = useQuery<{ activeSupplier: "dataxpress" | "hubnet" }>({
+    queryKey: ["/api/settings/supplier"],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
@@ -51,6 +57,14 @@ export default function AdminDashboard() {
   const completedOrders = orders?.filter((o) => o.status === "completed").length || 0;
 
   const recentOrders = orders?.slice(0, 5) || [];
+
+  const activeSupplier = supplierSettings?.activeSupplier || "dataxpress";
+  const dataxpressBalance = isLoadingWallet ? "..." : walletData?.dataxpress 
+    ? `${walletData.dataxpress.currency} ${Number(walletData.dataxpress.balance).toFixed(2)}` 
+    : "N/A";
+  const hubnetBalance = isLoadingWallet ? "..." : walletData?.hubnet 
+    ? `${walletData.hubnet.currency} ${Number(walletData.hubnet.balance).toFixed(2)}` 
+    : "N/A";
 
   const stats = [
     {
@@ -69,10 +83,17 @@ export default function AdminDashboard() {
     },
     {
       title: "DataXpress Balance",
-      value: isLoadingWallet ? "..." : walletData ? `${walletData.currency} ${Number(walletData.balance).toFixed(2)}` : "N/A",
+      value: dataxpressBalance,
       icon: Wallet,
       color: "text-chart-3",
-      testId: "stat-wallet-balance",
+      testId: "stat-dataxpress-balance",
+    },
+    {
+      title: "Hubnet Balance",
+      value: hubnetBalance,
+      icon: Wallet,
+      color: "text-chart-2",
+      testId: "stat-hubnet-balance",
     },
     {
       title: "Pending",
@@ -92,13 +113,25 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Overview of your MTN data sales</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground">Overview of your MTN data sales</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Active Supplier:</span>
+          <Badge 
+            variant={activeSupplier === "dataxpress" ? "default" : "secondary"}
+            className="text-sm font-semibold"
+            data-testid="badge-active-supplier"
+          >
+            {activeSupplier === "dataxpress" ? "DataXpress" : "Hubnet"}
+          </Badge>
+        </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

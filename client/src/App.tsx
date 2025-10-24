@@ -13,6 +13,7 @@ import Confirmation from "@/pages/confirmation";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminOrders from "@/pages/admin/orders";
 import AdminPackages from "@/pages/admin/packages";
+import AdminSettings from "@/pages/admin/settings";
 
 function Router() {
   return (
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/orders" component={AdminOrders} />
       <Route path="/admin/packages" component={AdminPackages} />
+      <Route path="/admin/settings" component={AdminSettings} />
 
       {/* Fallback to 404 */}
       <Route component={NotFound} />
