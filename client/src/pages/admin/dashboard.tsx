@@ -4,9 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Package, ShoppingCart, Clock, CheckCircle2, Wallet, Settings } from "lucide-react";
-import { Link } from "wouter";
+import { Package, ShoppingCart, Clock, CheckCircle2, Wallet } from "lucide-react";
 import type { OrderWithPackage } from "@shared/schema";
 
 export default function AdminDashboard() {
@@ -35,16 +33,12 @@ export default function AdminDashboard() {
     queryKey: ["/api/packages"],
   });
 
-  const { data: walletBalances, isLoading: isLoadingWallet } = useQuery<{
-    dataxpress: { success: boolean; balance?: string; currency?: string; message?: string };
-    hubnet: { success: boolean; balance?: string; currency?: string; message?: string };
+  const { data: walletData, isLoading: isLoadingWallet } = useQuery<{
+    balance: string;
+    currency: string;
   }>({
-    queryKey: ["/api/wallet/balances"],
+    queryKey: ["/api/wallet/balance"],
     refetchInterval: 30000, // Refresh every 30 seconds
-  });
-
-  const { data: supplierData } = useQuery<{ activeSupplier: string }>({
-    queryKey: ["/api/settings/supplier"],
   });
 
   if (isAuthLoading || !isAuthenticated) {
@@ -57,16 +51,6 @@ export default function AdminDashboard() {
   const completedOrders = orders?.filter((o) => o.status === "completed").length || 0;
 
   const recentOrders = orders?.slice(0, 5) || [];
-
-  const activeSupplier = supplierData?.activeSupplier || "dataxpress";
-  
-  const dataxpressBalance = walletBalances?.dataxpress.success 
-    ? `${walletBalances.dataxpress.currency} ${Number(walletBalances.dataxpress.balance).toFixed(2)}`
-    : "N/A";
-  
-  const hubnetBalance = walletBalances?.hubnet.success
-    ? `${walletBalances.hubnet.currency} ${Number(walletBalances.hubnet.balance).toFixed(2)}`
-    : "N/A";
 
   const stats = [
     {
@@ -85,17 +69,10 @@ export default function AdminDashboard() {
     },
     {
       title: "DataXpress Balance",
-      value: isLoadingWallet ? "..." : dataxpressBalance,
+      value: isLoadingWallet ? "..." : walletData ? `${walletData.currency} ${Number(walletData.balance).toFixed(2)}` : "N/A",
       icon: Wallet,
       color: "text-chart-3",
-      testId: "stat-dataxpress-balance",
-    },
-    {
-      title: "Hubnet Balance",
-      value: isLoadingWallet ? "..." : hubnetBalance,
-      icon: Wallet,
-      color: "text-chart-2",
-      testId: "stat-hubnet-balance",
+      testId: "stat-wallet-balance",
     },
     {
       title: "Pending",
@@ -115,30 +92,13 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Overview of your MTN data sales</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="text-right">
-            <p className="text-sm text-muted-foreground">Active Supplier</p>
-            <Badge 
-              variant={activeSupplier === "dataxpress" ? "default" : "secondary"}
-              className="mt-1"
-              data-testid="badge-active-supplier"
-            >
-              {activeSupplier === "dataxpress" ? "DataXpress" : "Hubnet"}
-            </Badge>
-          </div>
-          <Link href="/admin/settings">
-            <Settings className="w-5 h-5 text-muted-foreground hover:text-foreground cursor-pointer" data-testid="link-settings" />
-          </Link>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <p className="text-muted-foreground">Overview of your MTN data sales</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

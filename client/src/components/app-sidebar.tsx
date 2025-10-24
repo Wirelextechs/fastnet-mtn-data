@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, ShoppingCart, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -32,12 +32,6 @@ const menuItems = [
     url: "/admin/packages",
     icon: Package,
     testId: "link-admin-packages",
-  },
-  {
-    title: "Settings",
-    url: "/admin/settings",
-    icon: Settings,
-    testId: "link-admin-settings",
   },
 ];
 

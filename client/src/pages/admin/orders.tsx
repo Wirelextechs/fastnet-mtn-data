@@ -130,7 +130,7 @@ export default function AdminOrders() {
       queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
       toast({
         title: "Success",
-        description: "Order sent for fulfillment",
+        description: "Order sent to DataXpress for fulfillment",
       });
     },
     onError: (error: Error) => {
@@ -207,7 +207,6 @@ export default function AdminOrders() {
                     <TableHead>Total</TableHead>
                     <TableHead>Payment</TableHead>
                     <TableHead>Fulfillment</TableHead>
-                    <TableHead>Supplier</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -265,11 +264,6 @@ export default function AdminOrders() {
                               </span>
                             )}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="capitalize text-sm">
-                            {order.supplier || "dataxpress"}
-                          </span>
                         </TableCell>
                         <TableCell>
                           {new Date(order.createdAt).toLocaleDateString()}
