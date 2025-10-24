@@ -40,12 +40,31 @@ export const users = pgTable("users", {
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
+// Settings table - Global application settings
+export const settings = pgTable("settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: varchar("key").unique().notNull(), // Setting key (e.g., "activeSupplier")
+  value: text("value").notNull(), // Setting value (e.g., "dataxpress" or "hubnet")
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertSettingSchema = createInsertSchema(settings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertSetting = z.infer<typeof insertSettingSchema>;
+export type Setting = typeof settings.$inferSelect;
+
 // Data packages table
 export const packages = pgTable("packages", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   dataAmount: varchar("data_amount").notNull(), // e.g., "1GB", "5GB"
   price: decimal("price", { precision: 10, scale: 2 }).notNull(), // Customer price in GH¢
   supplierCost: decimal("supplier_cost", { precision: 10, scale: 2 }).notNull(), // Wholesale cost from DataXpress in GH¢
+  hubnetCost: decimal("hubnet_cost", { precision: 10, scale: 2 }), // Wholesale cost from Hubnet in GH¢
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -74,6 +93,7 @@ export const orders = pgTable("orders", {
   fulfillmentStatus: varchar("fulfillment_status").default("pending"), // pending, processing, fulfilled, failed
   fulfillmentError: text("fulfillment_error"), // Store error message if fulfillment fails
   dataxpressReference: varchar("dataxpress_reference"), // DataXpress order reference
+  supplier: varchar("supplier").default("dataxpress"), // Which supplier fulfilled this order: dataxpress or hubnet
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
