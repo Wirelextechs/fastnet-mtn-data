@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { packages, users } from "@shared/schema";
+import { packages, users, settings } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 const seedPackages = [
@@ -48,6 +48,24 @@ export async function initializeDatabase() {
       console.log("⚠️  No admin user found. First user to log in will be granted admin access.");
     } else {
       console.log("✓ Admin user(s) exist");
+    }
+    
+    // Initialize default supplier setting
+    const existingSupplierSetting = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.key, "active_supplier"))
+      .limit(1);
+    
+    if (existingSupplierSetting.length === 0) {
+      console.log("🔧 Initializing default supplier setting...");
+      await db.insert(settings).values({
+        key: "active_supplier",
+        value: "dataxpress",
+      });
+      console.log("✅ Default supplier set to DataXpress");
+    } else {
+      console.log(`✓ Active supplier: ${existingSupplierSetting[0].value}`);
     }
     
     console.log("✅ Database initialization complete");

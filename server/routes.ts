@@ -6,7 +6,9 @@ import { insertPackageSchema, insertOrderSchema } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { initializeDatabase } from "./init";
-import { purchaseDataBundle, getWalletBalance, getCostPrice } from "./dataxpress";
+import * as SupplierManager from "./supplier-manager";
+import * as DataXpress from "./dataxpress";
+import * as Hubnet from "./hubnet";
 
 /**
  * Fulfill an order by sending data to customer via DataXpress
@@ -37,22 +39,29 @@ async function fulfillOrder(orderId: string): Promise<void> {
 
     console.log(`🚀 Fulfilling order ${orderId}: ${pkg.dataAmount} to ${order.phoneNumber}`);
 
-    // Send to DataXpress using supplier cost (wholesale price)
-    const result = await purchaseDataBundle(
+    // Get the active supplier and determine which cost to use
+    const activeSupplier = await SupplierManager.getActiveSupplier();
+    const supplierCost = activeSupplier === "hubnet" && pkg.hubnetCost 
+      ? parseFloat(pkg.hubnetCost) 
+      : parseFloat(pkg.supplierCost);
+
+    // Send to active supplier using supplier cost (wholesale price)
+    const result = await SupplierManager.purchaseDataBundle(
       order.phoneNumber,
       pkg.dataAmount,
-      parseFloat(pkg.supplierCost),
+      supplierCost,
       order.paystackReference || order.id
     );
 
     if (result.success) {
-      // Update order as fulfilled
+      // Update order as fulfilled with supplier info
       await storage.updateOrder(orderId, {
         fulfillmentStatus: "fulfilled",
         fulfillmentError: null,
-        dataxpressReference: result.data?.reference || order.paystackReference,
+        dataxpressReference: result.data?.reference || result.data?.transaction_id || order.paystackReference,
+        supplier: result.supplier,
       });
-      console.log(`✅ Order ${orderId} fulfilled successfully`);
+      console.log(`✅ Order ${orderId} fulfilled successfully via ${result.supplier}`);
     } else {
       // Mark as failed with error message
       await storage.updateOrder(orderId, {
@@ -161,44 +170,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sync supplier costs from DataXpress real-time pricing
   app.post("/api/packages/sync-pricing", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      console.log("🔄 Starting DataXpress pricing sync...");
+      console.log("🔄 Starting pricing sync for both suppliers...");
       const packages = await storage.getAllPackages();
       
       const results = {
         total: packages.length,
-        updated: 0,
-        failed: 0,
-        errors: [] as string[],
+        dataxpress: { updated: 0, failed: 0, errors: [] as string[] },
+        hubnet: { updated: 0, failed: 0, errors: [] as string[] },
       };
 
       for (const pkg of packages) {
+        // Sync DataXpress pricing
         try {
-          console.log(`📊 Fetching cost for ${pkg.dataAmount}...`);
-          const priceResult = await getCostPrice(pkg.dataAmount);
+          console.log(`📊 Fetching DataXpress cost for ${pkg.dataAmount}...`);
+          const priceResult = await DataXpress.getCostPrice(pkg.dataAmount);
           
           if (priceResult.success && priceResult.costPrice !== undefined) {
-            // Update package with real-time cost from DataXpress
             await storage.updatePackage(pkg.id, {
               supplierCost: priceResult.costPrice.toFixed(2),
             });
-            console.log(`✅ Updated ${pkg.dataAmount}: GH₵${priceResult.costPrice.toFixed(2)}`);
-            results.updated++;
+            console.log(`✅ Updated DataXpress ${pkg.dataAmount}: GH₵${priceResult.costPrice.toFixed(2)}`);
+            results.dataxpress.updated++;
           } else {
-            console.warn(`⚠️  Failed to get cost for ${pkg.dataAmount}: ${priceResult.message}`);
-            results.failed++;
-            results.errors.push(`${pkg.dataAmount}: ${priceResult.message}`);
+            console.warn(`⚠️  Failed to get DataXpress cost for ${pkg.dataAmount}: ${priceResult.message}`);
+            results.dataxpress.failed++;
+            results.dataxpress.errors.push(`${pkg.dataAmount}: ${priceResult.message}`);
           }
         } catch (error: any) {
-          console.error(`❌ Error syncing ${pkg.dataAmount}:`, error);
-          results.failed++;
-          results.errors.push(`${pkg.dataAmount}: ${error.message}`);
+          console.error(`❌ Error syncing DataXpress ${pkg.dataAmount}:`, error);
+          results.dataxpress.failed++;
+          results.dataxpress.errors.push(`${pkg.dataAmount}: ${error.message}`);
         }
+
+        // Note: Hubnet doesn't provide cost price API
+        // hubnetCost must be set manually via admin panel
       }
 
-      console.log(`✅ Pricing sync complete: ${results.updated} updated, ${results.failed} failed`);
+      console.log(`✅ Pricing sync complete - DataXpress: ${results.dataxpress.updated} updated, ${results.dataxpress.failed} failed`);
       
       res.json({
-        message: `Synced ${results.updated} packages successfully`,
+        message: `Synced ${results.dataxpress.updated} DataXpress packages. Hubnet pricing must be set manually.`,
         results,
       });
     } catch (error: any) {
@@ -337,10 +348,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get DataXpress wallet balance
+  // Get wallet balances for all suppliers
+  app.get("/api/wallet/balances", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const result = await SupplierManager.getAllWalletBalances();
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error fetching wallet balances:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch wallet balances" });
+    }
+  });
+
+  // Get active supplier wallet balance (for backward compatibility)
   app.get("/api/wallet/balance", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const result = await getWalletBalance();
+      const result = await SupplierManager.getWalletBalance();
       if (result.success) {
         res.json({
           balance: result.balance,
@@ -352,6 +374,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error fetching wallet balance:", error);
       res.status(500).json({ message: error.message || "Failed to fetch wallet balance" });
+    }
+  });
+
+  // Supplier management endpoints - ADMIN ONLY
+  app.get("/api/settings/supplier", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const activeSupplier = await SupplierManager.getActiveSupplier();
+      res.json({ activeSupplier });
+    } catch (error: any) {
+      console.error("Error fetching active supplier:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch active supplier" });
+    }
+  });
+
+  app.post("/api/settings/supplier", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const supplierSchema = z.object({
+        supplier: z.enum(["dataxpress", "hubnet"]),
+      });
+      
+      const { supplier } = supplierSchema.parse(req.body);
+      await SupplierManager.setActiveSupplier(supplier);
+      
+      console.log(`🔐 Admin ${(req as any).user.claims.email} switched supplier to ${supplier}`);
+      
+      res.json({ 
+        message: `Active supplier switched to ${supplier}`,
+        activeSupplier: supplier,
+      });
+    } catch (error: any) {
+      console.error("Error setting active supplier:", error);
+      res.status(400).json({ message: error.message || "Failed to set active supplier" });
     }
   });
 
