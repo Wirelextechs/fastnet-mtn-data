@@ -1,10 +1,11 @@
 /**
  * Hubnet API Integration
- * https://console.hubnet.app/api
+ * https://console.hubnet.app/live/api/context/business/transaction
  * Authentication: token: Bearer {token}
+ * Rate Limit: 5 requests per minute
  */
 
-const HUBNET_BASE_URL = "https://console.hubnet.app/api";
+const HUBNET_BASE_URL = "https://console.hubnet.app/live/api/context/business/transaction";
 const API_KEY = process.env.HUBNET_API_KEY;
 
 if (!API_KEY) {
@@ -28,11 +29,11 @@ function extractVolumeInMB(dataAmount: string): string {
 }
 
 interface HubnetTransactionRequest {
-  phone: string;
-  volume: string; // In megabytes
-  reference: string;
-  referrer?: string;
-  webhook?: string;
+  phone: string; // 10 digits, national format (e.g., 0241234567)
+  volume: string; // In megabytes (e.g., "2000" for 2GB)
+  reference: string; // 6-25 characters unique reference
+  referrer?: string; // Optional 10 digits
+  webhook?: string; // Optional webhook URL
 }
 
 interface HubnetResponse {
@@ -90,7 +91,8 @@ export async function purchaseDataBundle(
       ref: orderReference,
     });
 
-    const response = await fetch(`${HUBNET_BASE_URL}/data/purchase-data-bundle`, {
+    // Hubnet endpoint: {network}-new-transaction where network is "mtn" for MTN
+    const response = await fetch(`${HUBNET_BASE_URL}/mtn-new-transaction`, {
       method: "POST",
       headers: {
         "token": `Bearer ${API_KEY}`,
@@ -154,28 +156,35 @@ export async function getWalletBalance(): Promise<{
   }
 
   try {
-    const response = await fetch(`${HUBNET_BASE_URL}/user`, {
+    const response = await fetch(`${HUBNET_BASE_URL}/check_balance`, {
       method: "GET",
       headers: {
         "token": `Bearer ${API_KEY}`,
       },
     });
 
-    const result: any = await response.json();
-
     if (!response.ok) {
       return {
         success: false,
-        message: "Failed to fetch wallet balance",
+        message: `Failed to fetch wallet balance: ${response.status}`,
       };
     }
 
-    // Hubnet returns wallet_balance in the user object
-    return {
-      success: true,
-      balance: result.wallet_balance || result.balance,
-      currency: result.currency || "NGN",
-    };
+    const result: any = await response.json();
+
+    // Hubnet returns: { status: "success", data: { wallet_balance: 51.352 } }
+    if (result.status === "success" && result.data?.wallet_balance !== undefined) {
+      return {
+        success: true,
+        balance: String(result.data.wallet_balance),
+        currency: "GHS", // Hubnet operates in Ghana (GHS)
+      };
+    } else {
+      return {
+        success: false,
+        message: result.message || "Failed to retrieve balance",
+      };
+    }
   } catch (error) {
     console.error(`❌ Failed to fetch Hubnet balance:`, error);
     return {
