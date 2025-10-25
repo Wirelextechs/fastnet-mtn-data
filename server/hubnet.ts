@@ -1,9 +1,10 @@
 /**
  * Hubnet API Integration
- * https://hubnet.ng/api
+ * https://console.hubnet.app/api
+ * Authentication: token: Bearer {token}
  */
 
-const HUBNET_BASE_URL = "https://hubnet.ng/api";
+const HUBNET_BASE_URL = "https://console.hubnet.app/api";
 const API_KEY = process.env.HUBNET_API_KEY;
 
 if (!API_KEY) {
@@ -92,7 +93,7 @@ export async function purchaseDataBundle(
     const response = await fetch(`${HUBNET_BASE_URL}/data/purchase-data-bundle`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${API_KEY}`,
+        "token": `Bearer ${API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(requestBody),
@@ -156,7 +157,7 @@ export async function getWalletBalance(): Promise<{
     const response = await fetch(`${HUBNET_BASE_URL}/user`, {
       method: "GET",
       headers: {
-        "Authorization": `Bearer ${API_KEY}`,
+        "token": `Bearer ${API_KEY}`,
       },
     });
 
