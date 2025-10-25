@@ -14,10 +14,10 @@ if (!API_KEY) {
 
 /**
  * Extract package size number from data amount string
- * Hubnet expects volume in MEGABYTES (e.g., 2000 for 2GB)
+ * Hubnet expects volume in MEGABYTES using decimal conversion (1GB = 1000MB)
  * 
  * @param dataAmount - Package size like "1GB", "5GB", "10GB"
- * @returns Volume in megabytes (e.g., "5GB" → "5120")
+ * @returns Volume in megabytes (e.g., "5GB" → "5000")
  */
 function extractVolumeInMB(dataAmount: string): string {
   const match = dataAmount.match(/^(\d+)GB$/);
@@ -25,7 +25,7 @@ function extractVolumeInMB(dataAmount: string): string {
     throw new Error(`Invalid data amount format: ${dataAmount}`);
   }
   const gb = parseInt(match[1]);
-  return (gb * 1024).toString(); // Convert GB to MB
+  return (gb * 1000).toString(); // Convert GB to MB (decimal: 1GB = 1000MB)
 }
 
 interface HubnetTransactionRequest {
