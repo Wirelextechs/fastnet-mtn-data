@@ -1,9 +1,9 @@
 /**
  * Hubnet API Integration
- * https://console.hubnet.app/live/api
+ * https://hubnet.ng/api
  */
 
-const HUBNET_BASE_URL = "https://console.hubnet.app/live/api/context/business/transaction";
+const HUBNET_BASE_URL = "https://hubnet.ng/api";
 const API_KEY = process.env.HUBNET_API_KEY;
 
 if (!API_KEY) {
@@ -89,10 +89,10 @@ export async function purchaseDataBundle(
       ref: orderReference,
     });
 
-    const response = await fetch(`${HUBNET_BASE_URL}/mtn-new-transaction`, {
+    const response = await fetch(`${HUBNET_BASE_URL}/data/purchase-data-bundle`, {
       method: "POST",
       headers: {
-        "token": `Bearer ${API_KEY}`,
+        "Authorization": `Bearer ${API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(requestBody),
@@ -153,26 +153,27 @@ export async function getWalletBalance(): Promise<{
   }
 
   try {
-    const response = await fetch(`${HUBNET_BASE_URL}/check_balance`, {
+    const response = await fetch(`${HUBNET_BASE_URL}/user`, {
       method: "GET",
       headers: {
-        "token": `Bearer ${API_KEY}`,
+        "Authorization": `Bearer ${API_KEY}`,
       },
     });
 
-    const result: HubnetBalanceResponse = await response.json();
+    const result: any = await response.json();
 
-    if (!response.ok || !result.status) {
+    if (!response.ok) {
       return {
         success: false,
         message: "Failed to fetch wallet balance",
       };
     }
 
+    // Hubnet returns wallet_balance in the user object
     return {
       success: true,
-      balance: result.balance,
-      currency: result.currency || "GHS",
+      balance: result.wallet_balance || result.balance,
+      currency: result.currency || "NGN",
     };
   } catch (error) {
     console.error(`❌ Failed to fetch Hubnet balance:`, error);
