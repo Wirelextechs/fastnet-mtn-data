@@ -355,6 +355,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         supplierManager.getWalletBalance("dakazina"),
       ]);
 
+      console.log("Wallet balance results:", JSON.stringify({
+        dataxpress: dataxpressResult,
+        hubnet: hubnetResult,
+        dakazina: dakazinaResult,
+      }, null, 2));
+
       res.json({
         dataxpress: dataxpressResult.success ? {
           balance: dataxpressResult.balance,
