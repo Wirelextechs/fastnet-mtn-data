@@ -346,12 +346,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get wallet balance for both suppliers
+  // Get wallet balance for all suppliers
   app.get("/api/wallet/balance", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const [dataxpressResult, hubnetResult] = await Promise.all([
+      const [dataxpressResult, hubnetResult, dakazinaResult] = await Promise.all([
         supplierManager.getWalletBalance("dataxpress"),
         supplierManager.getWalletBalance("hubnet"),
+        supplierManager.getWalletBalance("dakazina"),
       ]);
 
       res.json({
@@ -362,6 +363,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hubnet: hubnetResult.success ? {
           balance: hubnetResult.balance,
           currency: hubnetResult.currency,
+        } : null,
+        dakazina: dakazinaResult.success ? {
+          balance: dakazinaResult.balance,
+          currency: dakazinaResult.currency,
         } : null,
       });
     } catch (error: any) {
@@ -384,7 +389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/settings/supplier", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const schema = z.object({
-        supplier: z.enum(["dataxpress", "hubnet"]),
+        supplier: z.enum(["dataxpress", "hubnet", "dakazina"]),
       });
 
       const { supplier } = schema.parse(req.body);

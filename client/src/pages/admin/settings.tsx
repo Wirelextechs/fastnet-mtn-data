@@ -24,13 +24,21 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Settings2, RefreshCw } from "lucide-react";
 
+type SupplierType = "dataxpress" | "hubnet" | "dakazina";
+
+const supplierDisplayNames: Record<SupplierType, string> = {
+  dataxpress: "DataXpress",
+  hubnet: "Hubnet",
+  dakazina: "DataKazina",
+};
+
 export default function AdminSettings() {
   const { toast } = useToast();
-  const [selectedSupplier, setSelectedSupplier] = useState<"dataxpress" | "hubnet">("dataxpress");
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierType>("dataxpress");
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
 
-  const { data: settings, isLoading } = useQuery<{ activeSupplier: "dataxpress" | "hubnet" }>({
+  const { data: settings, isLoading } = useQuery<{ activeSupplier: SupplierType }>({
     queryKey: ["/api/settings/supplier"],
   });
 
@@ -59,7 +67,7 @@ export default function AdminSettings() {
       
       toast({
         title: "Supplier Switched",
-        description: `All new orders will now be sent to ${selectedSupplier === "dataxpress" ? "DataXpress" : "Hubnet"}`,
+        description: `All new orders will now be sent to ${supplierDisplayNames[selectedSupplier]}`,
       });
 
       setShowConfirmDialog(false);
@@ -74,7 +82,7 @@ export default function AdminSettings() {
     }
   };
 
-  const handleSelectChange = (value: "dataxpress" | "hubnet") => {
+  const handleSelectChange = (value: SupplierType) => {
     setSelectedSupplier(value);
     if (value !== settings?.activeSupplier) {
       setShowConfirmDialog(true);
@@ -115,7 +123,7 @@ export default function AdminSettings() {
               <div>
                 <p className="text-sm font-medium">Current Active Supplier</p>
                 <p className="text-2xl font-bold mt-1">
-                  {activeSupplier === "dataxpress" ? "DataXpress" : "Hubnet"}
+                  {supplierDisplayNames[activeSupplier]}
                 </p>
               </div>
               <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" data-testid="status-active-supplier" />
@@ -130,6 +138,7 @@ export default function AdminSettings() {
                 <SelectContent>
                   <SelectItem value="dataxpress" data-testid="option-dataxpress">DataXpress</SelectItem>
                   <SelectItem value="hubnet" data-testid="option-hubnet">Hubnet</SelectItem>
+                  <SelectItem value="dakazina" data-testid="option-dakazina">DataKazina</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
@@ -155,9 +164,9 @@ export default function AdminSettings() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Supplier Switch</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to switch to <strong>{selectedSupplier === "dataxpress" ? "DataXpress" : "Hubnet"}</strong>?
+              Are you sure you want to switch to <strong>{supplierDisplayNames[selectedSupplier]}</strong>?
               <br /><br />
-              All new orders will be automatically sent to {selectedSupplier === "dataxpress" ? "DataXpress" : "Hubnet"} for fulfillment 
+              All new orders will be automatically sent to {supplierDisplayNames[selectedSupplier]} for fulfillment 
               until you manually switch suppliers again.
             </AlertDialogDescription>
           </AlertDialogHeader>

@@ -37,12 +37,13 @@ export default function AdminDashboard() {
   const { data: walletData, isLoading: isLoadingWallet } = useQuery<{
     dataxpress: { balance: string; currency: string } | null;
     hubnet: { balance: string; currency: string } | null;
+    dakazina: { balance: string; currency: string } | null;
   }>({
     queryKey: ["/api/wallet/balance"],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
-  const { data: supplierSettings } = useQuery<{ activeSupplier: "dataxpress" | "hubnet" }>({
+  const { data: supplierSettings } = useQuery<{ activeSupplier: "dataxpress" | "hubnet" | "dakazina" }>({
     queryKey: ["/api/settings/supplier"],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
@@ -65,6 +66,9 @@ export default function AdminDashboard() {
   const hubnetBalance = isLoadingWallet ? "..." : walletData?.hubnet 
     ? `${walletData.hubnet.currency} ${Number(walletData.hubnet.balance).toFixed(2)}` 
     : "N/A";
+  const dakazinaBalance = isLoadingWallet ? "..." : walletData?.dakazina 
+    ? `${walletData.dakazina.currency} ${Number(walletData.dakazina.balance).toFixed(2)}` 
+    : "N/A";
 
   const stats = [
     {
@@ -82,18 +86,25 @@ export default function AdminDashboard() {
       testId: "stat-revenue",
     },
     {
-      title: "DataXpress Balance",
+      title: "DataXpress",
       value: dataxpressBalance,
       icon: Wallet,
       color: "text-chart-3",
       testId: "stat-dataxpress-balance",
     },
     {
-      title: "Hubnet Balance",
+      title: "Hubnet",
       value: hubnetBalance,
       icon: Wallet,
       color: "text-chart-2",
       testId: "stat-hubnet-balance",
+    },
+    {
+      title: "DataKazina",
+      value: dakazinaBalance,
+      icon: Wallet,
+      color: "text-chart-4",
+      testId: "stat-dakazina-balance",
     },
     {
       title: "Pending",
@@ -121,17 +132,17 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Active Supplier:</span>
           <Badge 
-            variant={activeSupplier === "dataxpress" ? "default" : "secondary"}
+            variant="default"
             className="text-sm font-semibold"
             data-testid="badge-active-supplier"
           >
-            {activeSupplier === "dataxpress" ? "DataXpress" : "Hubnet"}
+            {activeSupplier === "dataxpress" ? "DataXpress" : activeSupplier === "hubnet" ? "Hubnet" : "DataKazina"}
           </Badge>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

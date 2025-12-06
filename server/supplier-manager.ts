@@ -1,13 +1,14 @@
 /**
  * Supplier Manager - Central routing for multi-supplier fulfillment
- * Routes orders to the active supplier (DataXpress or Hubnet)
+ * Routes orders to the active supplier (DataXpress, Hubnet, or DataKazina)
  */
 
 import * as dataxpress from "./dataxpress";
 import * as hubnet from "./hubnet";
+import * as dakazina from "./dakazina";
 import { storage } from "./storage";
 
-export type SupplierName = "dataxpress" | "hubnet";
+export type SupplierName = "dataxpress" | "hubnet" | "dakazina";
 
 /**
  * Get the currently active supplier from settings
@@ -15,7 +16,7 @@ export type SupplierName = "dataxpress" | "hubnet";
 async function getActiveSupplier(): Promise<SupplierName> {
   try {
     const setting = await storage.getSetting("activeSupplier");
-    if (setting && (setting.value === "dataxpress" || setting.value === "hubnet")) {
+    if (setting && (setting.value === "dataxpress" || setting.value === "hubnet" || setting.value === "dakazina")) {
       return setting.value as SupplierName;
     }
     // Default to dataxpress if setting not found
@@ -42,6 +43,8 @@ export async function purchaseDataBundle(
   let result;
   if (activeSupplier === "hubnet") {
     result = await hubnet.purchaseDataBundle(phoneNumber, dataAmount, price, orderReference);
+  } else if (activeSupplier === "dakazina") {
+    result = await dakazina.purchaseDataBundle(phoneNumber, dataAmount, price, orderReference);
   } else {
     result = await dataxpress.purchaseDataBundle(phoneNumber, dataAmount, price, orderReference);
   }
@@ -65,6 +68,8 @@ export async function getWalletBalance(
 }> {
   if (supplier === "hubnet") {
     return await hubnet.getWalletBalance();
+  } else if (supplier === "dakazina") {
+    return await dakazina.getWalletBalance();
   } else {
     return await dataxpress.getWalletBalance();
   }
@@ -79,6 +84,8 @@ export async function getCostPrice(
 ): Promise<{ success: boolean; costPrice?: number; message?: string }> {
   if (supplier === "hubnet") {
     return await hubnet.getCostPrice(dataAmount);
+  } else if (supplier === "dakazina") {
+    return await dakazina.getCostPrice(dataAmount);
   } else {
     return await dataxpress.getCostPrice(dataAmount);
   }
