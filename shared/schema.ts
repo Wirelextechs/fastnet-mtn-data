@@ -65,6 +65,7 @@ export const packages = pgTable("packages", {
   price: decimal("price", { precision: 10, scale: 2 }).notNull(), // Customer price in GH¢
   supplierCost: decimal("supplier_cost", { precision: 10, scale: 2 }).notNull(), // Wholesale cost from DataXpress in GH¢
   hubnetCost: decimal("hubnet_cost", { precision: 10, scale: 2 }), // Wholesale cost from Hubnet in GH¢
+  dakazinaCost: decimal("dakazina_cost", { precision: 10, scale: 2 }), // Wholesale cost from DataKazina in GH¢
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

@@ -38,18 +38,24 @@ async function fulfillOrder(orderId: string): Promise<void> {
 
     console.log(`🚀 Fulfilling order ${orderId}: ${pkg.dataAmount} to ${order.phoneNumber}`);
 
-    // Get active supplier and appropriate wholesale cost
-    const activeSupplier = await supplierManager.getActiveSupplierName();
-    const supplierCost = activeSupplier === "hubnet" && pkg.hubnetCost 
-      ? parseFloat(pkg.hubnetCost) 
-      : parseFloat(pkg.supplierCost);
+    // Use order's stored supplier or fall back to active supplier
+    const orderSupplier = order.supplier as "dataxpress" | "hubnet" | "dakazina" || await supplierManager.getActiveSupplierName();
+    
+    // Get appropriate wholesale cost for the supplier
+    let supplierCost = parseFloat(pkg.supplierCost); // Default to DataXpress cost
+    if (orderSupplier === "hubnet" && pkg.hubnetCost) {
+      supplierCost = parseFloat(pkg.hubnetCost);
+    } else if (orderSupplier === "dakazina" && pkg.dakazinaCost) {
+      supplierCost = parseFloat(pkg.dakazinaCost);
+    }
 
-    // Send to active supplier using supplier cost (wholesale price)
+    // Send to order's supplier using supplier cost (wholesale price)
     const result = await supplierManager.purchaseDataBundle(
       order.phoneNumber,
       pkg.dataAmount,
       supplierCost,
-      order.paystackReference || order.id
+      order.paystackReference || order.id,
+      orderSupplier // Use the order's stored supplier
     );
 
     if (result.success) {
@@ -280,6 +286,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fee = packagePrice * 0.0118; // 1.18% fee
       const totalAmount = packagePrice + fee;
       
+      // Get current active supplier
+      const activeSupplier = await supplierManager.getActiveSupplierName();
+      
       // Create order with server-determined amount and status
       const order = await storage.createOrder({
         packageId: pkg.id,
@@ -290,6 +299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalAmount: totalAmount.toFixed(2), // Total amount customer pays
         paystackReference: reference,
         status: "pending", // Always start as pending
+        supplier: activeSupplier, // Capture active supplier at order time
       });
 
       // Return order for frontend to use with Paystack SDK

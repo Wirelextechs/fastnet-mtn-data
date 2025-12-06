@@ -28,22 +28,28 @@ async function getActiveSupplier(): Promise<SupplierName> {
 }
 
 /**
- * Purchase a data bundle using the active supplier
+ * Purchase a data bundle using the specified supplier or active supplier
+ * @param phoneNumber Customer phone number
+ * @param dataAmount Package size (e.g., "5GB")
+ * @param price Wholesale cost
+ * @param orderReference Order reference
+ * @param supplier Optional: specific supplier to use (defaults to active supplier)
  */
 export async function purchaseDataBundle(
   phoneNumber: string,
   dataAmount: string,
   price: number,
-  orderReference: string
+  orderReference: string,
+  supplier?: SupplierName
 ): Promise<{ success: boolean; message: string; data?: any; supplier: SupplierName }> {
-  const activeSupplier = await getActiveSupplier();
+  const targetSupplier = supplier || await getActiveSupplier();
   
-  console.log(`📡 Using ${activeSupplier.toUpperCase()} for order ${orderReference}`);
+  console.log(`📡 Using ${targetSupplier.toUpperCase()} for order ${orderReference}`);
 
   let result;
-  if (activeSupplier === "hubnet") {
+  if (targetSupplier === "hubnet") {
     result = await hubnet.purchaseDataBundle(phoneNumber, dataAmount, price, orderReference);
-  } else if (activeSupplier === "dakazina") {
+  } else if (targetSupplier === "dakazina") {
     result = await dakazina.purchaseDataBundle(phoneNumber, dataAmount, price, orderReference);
   } else {
     result = await dataxpress.purchaseDataBundle(phoneNumber, dataAmount, price, orderReference);
@@ -51,7 +57,7 @@ export async function purchaseDataBundle(
 
   return {
     ...result,
-    supplier: activeSupplier,
+    supplier: targetSupplier,
   };
 }
 
