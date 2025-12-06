@@ -1,0 +1,244 @@
+Perfect! I've successfully accessed and extracted the API documentation. Here's a detailed API integration documentation for the DataKazina API:
+
+📋 DataKazina API - Complete Integration Guide
+
+Overview
+
+The DataKazina API is a complete collection for managing data package purchases, transactions, and account management. It provides endpoints for purchasing single/bulk data packages and tracking transaction history.
+
+🔐 Authentication
+
+Authentication Method: API Key
+
+Header Parameter:
+
+Key: x-api-key
+
+Value: dk_2uU6jK7JfGEPZrTvqzUXv9ZK3JJ3D9mO (example)
+
+All requests require the API key to be included in the request headers.
+
+📡 Base URL
+
+https://reseller.dakazinabusinessconsult.com/api/v1/
+
+🔌 API Endpoints
+
+1. Fetch Transactions
+
+Method: GET
+
+Endpoint: /fetch-transactions
+
+Full URL: https://reseller.dakazinabusinessconsult.com/api/v1/fetch-transactions
+
+Description: Get transaction history for the authenticated user
+
+Authentication: API Key required
+
+Request Headers:
+
+x-api-key: {your_api_key}
+
+cURL Example:
+
+curl --location 'https://reseller.dakazinabusinessconsult.com/api/v1/fetch-transactions' \
+--header 'x-api-key: dk_2uU6jK7JfGEPZrTvqzUXv9ZK3JJ3D9mO'
+
+2. Check Transaction Status
+
+Method: POST
+
+Endpoint: /fetch-single-transaction
+
+Full URL: https://reseller.dakazinabusinessconsult.com/api/v1/fetch-single-transaction
+
+Description: Check the status of a specific transaction
+
+Authentication: API Key required
+
+Request Headers:
+
+Content-Type: application/json
+x-api-key: {your_api_key}
+
+Request Body:
+
+{
+    "transaction_id": "txn_68befc1e59dc4"
+}
+
+cURL Example:
+
+curl --location 'https://reseller.dakazinabusinessconsult.com/api/v1/fetch-single-transaction' \
+--header 'Content-Type: application/json' \
+--header 'x-api-key: dk_2uU6jK7JfGEPZrTvqzUXv9ZK3JJ3D9mO' \
+--data '{
+    "transaction_id": "txn_68befc1e59dc4"
+}'
+
+3. Buy Data Package (Single)
+
+Method: POST
+
+Endpoint: /buy-data-package
+
+Full URL: https://reseller.dakazinabusinessconsult.com/api/v1/buy-data-package
+
+Description: Purchase a single data package
+
+Authentication: API Key required
+
+Request Headers:
+
+Content-Type: application/json
+Accept: application/json
+x-api-key: {your_api_key}
+
+Request Body:
+
+{
+  "recipient_msisdn": "0551053716",
+  "network_id": 3,
+  "shared_bundle": 12,
+  "incoming_api_ref": "unique_reference_003"
+}
+
+Request Parameters Explanation:
+
+Parameter
+
+Type
+
+Description
+
+recipient_msisdn
+
+String
+
+Phone number of the recipient (mobile number)
+
+network_id
+
+Integer
+
+Network identifier (e.g., 3 for a specific network)
+
+shared_bundle
+
+Integer
+
+Bundle/package ID to purchase
+
+incoming_api_ref
+
+String
+
+Unique reference for tracking this transaction
+
+cURL Example:
+
+curl --location 'https://reseller.dakazinabusinessconsult.com/api/v1/buy-data-package' \
+--header 'Content-Type: application/json' \
+--header 'Accept: application/json' \
+--header 'x-api-key: dk_2uU6jK7JfGEPZrTvqzUXv9ZK3JJ3D9mO' \
+--data '{
+  "recipient_msisdn": "0551053716",
+  "network_id": 3,
+  "shared_bundle": 12,
+  "incoming_api_ref": "unique_reference_003"
+}'
+
+4. Buy Bulk Data Packages
+
+Method: POST
+
+Endpoint: /buy-bulk-data-packages
+
+Full URL: https://reseller.dakazinabusinessconsult.com/api/v1/buy-bulk-data-packages
+
+Description: Purchase multiple data packages in a single request
+
+Authentication: API Key required
+
+Request Headers:
+
+Content-Type: application/json
+x-api-key: {your_api_key}
+
+Request Body:
+
+{
+  "orders": [
+    {
+      "recipient_msisdn": "0555702562",
+      "network_id": 3,
+      "shared_bundle": 1,
+      "incoming_api_ref": "bulk_ref_001"
+    },
+    {
+      "recipient_msisdn": "0551053716",
+      "network_id": 3,
+      "shared_bundle": 2,
+      "incoming_api_ref": "bulk_ref_002"
+    }
+  ]
+}
+
+cURL Example:
+
+curl --location 'https://reseller.dakazinabusinessconsult.com/api/v1/buy-bulk-data-packages' \
+--header 'Content-Type: application/json' \
+--header 'x-api-key: dk_2uU6jK7JfGEPZrTvqzUXv9ZK3JJ3D9mO' \
+--data '{
+  "orders": [
+    {
+      "recipient_msisdn": "0555702562",
+      "network_id": 3,
+      "shared_bundle": 1,
+      "incoming_api_ref": "bulk_ref_001"
+    },
+    {
+      "recipient_msisdn": "0551053716",
+      "network_id": 3,
+      "shared_bundle": 2,
+      "incoming_api_ref": "bulk_ref_002"
+    }
+  ]
+}'
+
+📊 Response Format
+
+All endpoints return JSON responses. The documentation indicates that responses include:
+
+Body: Response data (varies by endpoint)
+
+Headers: Response headers information
+
+🔑 Key Integration Points
+
+Always include the API key in the x-api-key header for all requests
+
+Use JSON format for request bodies (Content-Type: application/json)
+
+Unique References: Use the incoming_api_ref parameter to track transactions uniquely
+
+Bulk Operations: For multiple purchases, use the bulk endpoint to optimize API calls
+
+Phone Format: Ensure phone numbers (msisdn) are in the correct format for the target network
+
+📝 Integration Checklist
+
+✅ Store API key securely (environment variables recommended)
+
+✅ Implement error handling for failed requests
+
+✅ Use unique transaction references for tracking
+
+✅ Validate phone numbers before sending requests
+
+✅ Implement retry logic for network failures
+
+✅ Log all transactions for audit purposes
+
+This documentation provides everything needed to integrate with the DataKazina API for data package purchasing and transaction management!

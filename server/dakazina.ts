@@ -94,31 +94,24 @@ export async function purchaseDataBundle(
   }
 
   try {
-    // Parse data amount to get volume in MB (e.g., "5GB" -> 5000)
-    const volumeMatch = dataAmount.match(/^(\d+)(GB|MB)$/i);
-    let volumeInMB = 0;
-    if (volumeMatch) {
-      const value = parseInt(volumeMatch[1], 10);
-      const unit = volumeMatch[2].toUpperCase();
-      volumeInMB = unit === "GB" ? value * 1000 : value;
-    }
+    const sharedBundleId = getSharedBundleId(dataAmount);
 
-    // Try sending data_plan as string since they said "there's no IDs"
-    const requestBody: DataKazinaPurchaseRequest = {
+    // Match exact format from DataKazina documentation
+    const requestBody = {
       recipient_msisdn: phoneNumber,
-      network_id: 3, // MTN Ghana
-      data_plan: dataAmount, // Send as string like "1GB"
-      volume: volumeInMB,    // Also send volume in MB
+      network_id: 3, // MTN Ghana (as per documentation)
+      shared_bundle: sharedBundleId,
       incoming_api_ref: orderReference,
     };
 
     console.log(`📡 Sending data order to DataKazina:`, {
       phone: phoneNumber,
       dataAmount: dataAmount,
-      volumeInMB: volumeInMB,
+      shared_bundle: sharedBundleId,
       network_id: 3,
       supplierCost: price,
       ref: orderReference,
+      requestBody: JSON.stringify(requestBody),
     });
 
     const response = await fetch(`${DAKAZINA_BASE_URL}/buy-data-package`, {
