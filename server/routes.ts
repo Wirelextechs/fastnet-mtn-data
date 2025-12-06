@@ -470,6 +470,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Debug endpoint to discover DataKazina bundle IDs
+  app.get("/api/admin/dakazina/bundles", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { fetchAvailableBundles } = await import("./dakazina");
+      const result = await fetchAvailableBundles();
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error fetching DataKazina bundles:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch bundles" });
+    }
+  });
+
   // Settings routes - Supplier management
   app.get("/api/settings/supplier", isAuthenticated, isAdmin, async (req, res) => {
     try {

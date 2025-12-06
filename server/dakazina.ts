@@ -281,3 +281,60 @@ export async function getCostPrice(
     message: "DataKazina does not provide automated cost price API. Please configure pricing manually.",
   };
 }
+
+/**
+ * Fetch available data packages/bundles from DataKazina
+ * This helps discover the correct shared_bundle IDs
+ */
+export async function fetchAvailableBundles(): Promise<{
+  success: boolean;
+  bundles?: any[];
+  message?: string;
+}> {
+  if (!API_KEY) {
+    return {
+      success: false,
+      message: "DataKazina API key not configured",
+    };
+  }
+
+  // Try common endpoint names for fetching available packages
+  const endpoints = [
+    "/fetch-bundles",
+    "/get-bundles",
+    "/bundles",
+    "/packages",
+    "/data-packages",
+    "/fetch-packages",
+    "/get-data-plans",
+  ];
+
+  for (const endpoint of endpoints) {
+    try {
+      console.log(`🔍 Trying DataKazina endpoint: ${endpoint}`);
+      const response = await fetch(`${DAKAZINA_BASE_URL}${endpoint}`, {
+        method: "GET",
+        headers: {
+          "x-api-key": API_KEY,
+          "Accept": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`✅ DataKazina bundles from ${endpoint}:`, result);
+        return {
+          success: true,
+          bundles: result.data || result.bundles || result,
+        };
+      }
+    } catch (error) {
+      // Continue to next endpoint
+    }
+  }
+
+  return {
+    success: false,
+    message: "Could not find bundles endpoint",
+  };
+}
