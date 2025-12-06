@@ -344,6 +344,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Verify payment with Paystack and update order status
+  app.post("/api/orders/verify/:reference", async (req, res) => {
+    try {
+      const { reference } = req.params;
+      
+      console.log(`🔍 Verifying payment for reference: ${reference}`);
+      
+      // Find order by reference
+      const order = await storage.getOrderByReference(reference);
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+      
+      // If already completed, return success
+      if (order.status === "completed") {
+        console.log(`✅ Order ${order.id} already completed`);
+        return res.json({ 
+          success: true, 
+          message: "Payment already verified",
+          order 
+        });
+      }
+      
+      // Verify with Paystack
+      const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY;
+      if (!paystackSecretKey) {
+        console.error("❌ PAYSTACK_SECRET_KEY not configured");
+        return res.status(500).json({ message: "Payment verification not configured" });
+      }
+      
+      const verifyResponse = await fetch(
+        `https://api.paystack.co/transaction/verify/${reference}`,
+        {
+          headers: {
+            Authorization: `Bearer ${paystackSecretKey}`,
+          },
+        }
+      );
+      
+      const verifyData = await verifyResponse.json();
+      
+      console.log(`📡 Paystack verification response:`, {
+        status: verifyData.status,
+        data_status: verifyData.data?.status,
+        reference: verifyData.data?.reference
+      });
+      
+      if (verifyData.status && verifyData.data?.status === "success") {
+        console.log(`✅ Payment verified for order ${order.id}`);
+        
+        // Update order to completed
+        await storage.updateOrder(order.id, { status: "completed" });
+        
+        // Trigger automatic fulfillment
+        fulfillOrder(order.id).catch((error) => {
+          console.error(`❌ Failed to fulfill order ${order.id}:`, error);
+        });
+        
+        const updatedOrder = await storage.getOrderById(order.id);
+        
+        return res.json({ 
+          success: true, 
+          message: "Payment verified successfully",
+          order: updatedOrder 
+        });
+      } else {
+        console.log(`⚠️ Payment not successful: ${verifyData.data?.status || 'unknown'}`);
+        return res.json({ 
+          success: false, 
+          message: `Payment status: ${verifyData.data?.status || 'pending'}`,
+          order 
+        });
+      }
+    } catch (error: any) {
+      console.error("❌ Error verifying payment:", error);
+      res.status(500).json({ message: error.message || "Failed to verify payment" });
+    }
+  });
+
   // Manual fulfillment endpoint for admin
   app.post("/api/orders/:id/fulfill", isAuthenticated, isAdmin, async (req, res) => {
     try {

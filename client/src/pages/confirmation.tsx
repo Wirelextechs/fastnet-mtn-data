@@ -1,29 +1,66 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import type { OrderWithPackage } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Confirmation() {
   const [, params] = useRoute("/confirmation/:reference");
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
+  const [isVerifying, setIsVerifying] = useState(true);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
 
   const reference = params?.reference;
 
-  const { data: order, isLoading } = useQuery<OrderWithPackage>({
+  const { data: order, isLoading, refetch } = useQuery<OrderWithPackage>({
     queryKey: ["/api/orders/reference", reference],
     enabled: !!reference,
   });
 
-  if (isLoading) {
+  // Verify payment when page loads
+  useEffect(() => {
+    if (!reference) return;
+    
+    const verifyPayment = async () => {
+      try {
+        setIsVerifying(true);
+        setVerificationError(null);
+        
+        const res = await apiRequest("POST", `/api/orders/verify/${reference}`);
+        const result = await res.json();
+        
+        if (result.success) {
+          // Refetch order to get updated status
+          await refetch();
+          queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+        } else {
+          setVerificationError(result.message || "Payment verification pending");
+        }
+      } catch (error: any) {
+        setVerificationError(error.message || "Failed to verify payment");
+      } finally {
+        setIsVerifying(false);
+      }
+    };
+
+    verifyPayment();
+  }, [reference, refetch, queryClient]);
+
+  if (isLoading || isVerifying) {
     return (
       <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-2xl px-4 py-8 text-center">
-          <Skeleton className="mx-auto mb-6 h-20 w-20 rounded-full" />
-          <Skeleton className="mx-auto mb-4 h-8 w-64" />
-          <Skeleton className="mx-auto mb-6 h-32 w-full" />
-          <Skeleton className="mx-auto h-12 w-48" />
+          <div className="mb-6">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+              <Loader2 className="h-12 w-12 text-primary animate-spin" />
+            </div>
+          </div>
+          <h1 className="mb-2 text-2xl font-bold">Verifying Payment...</h1>
+          <p className="text-muted-foreground">Please wait while we confirm your payment</p>
         </div>
       </div>
     );
