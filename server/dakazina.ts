@@ -186,10 +186,11 @@ export async function getWalletBalance(): Promise<{
       };
     }
 
-    const result: DataKazinaBalanceResponse = await response.json();
+    const result = await response.json();
+    console.log("DataKazina balance response:", result);
 
-    // Handle various possible response formats
-    const balance = result.balance ?? result.data?.balance ?? result.data?.wallet_balance;
+    // Handle the actual API response format: { status: 'Success', 'Wallet Balance': '26.45' }
+    const balance = result['Wallet Balance'] ?? result.balance ?? result.data?.balance ?? result.data?.wallet_balance;
 
     if (balance !== undefined) {
       return {
@@ -197,14 +198,12 @@ export async function getWalletBalance(): Promise<{
         balance: String(balance),
         currency: "GHS",
       };
-    } else if (result.status === false) {
+    } else if (result.status === 'Failed' || result.status === false) {
       return {
         success: false,
         message: result.message || "Failed to retrieve balance",
       };
     } else {
-      // Try to extract balance from any structure
-      console.log("DataKazina balance response:", result);
       return {
         success: false,
         message: "Unexpected response format from DataKazina",
