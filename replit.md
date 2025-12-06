@@ -7,7 +7,7 @@ FastNet is a premium MTN data package sales platform designed to allow customers
 I prefer clear and concise communication. When suggesting code changes, please provide a brief explanation of the "why" behind the change, not just the "what." I value iterative development, so propose changes in manageable steps. Always ask for my approval before implementing major architectural changes or introducing new dependencies. Ensure that any modifications align with the existing code style and design principles.
 
 ## System Architecture
-FastNet is built with a modern web stack. The **Frontend** uses React with TypeScript, Wouter for routing, TanStack Query for data fetching, and Shadcn UI with Tailwind CSS for styling. The **Backend** is developed with Express.js and TypeScript. **PostgreSQL** (Neon) serves as the database, managed with Drizzle ORM. Authentication is handled via **Replit Auth** (OpenID Connect). Payments are processed securely through **Paystack**. The system integrates with multiple data suppliers, **DataXpress and Hubnet**, using a manual switching mechanism.
+FastNet is built with a modern web stack. The **Frontend** uses React with TypeScript, Wouter for routing, TanStack Query for data fetching, and Shadcn UI with Tailwind CSS for styling. The **Backend** is developed with Express.js and TypeScript. **PostgreSQL** (Neon) serves as the database, managed with Drizzle ORM. Authentication is handled via **Replit Auth** (OpenID Connect). Payments are processed securely through **Paystack**. The system integrates with three data suppliers (**DataXpress**, **Hubnet**, and **DataKazina**) using a manual switching mechanism.
 
 ### UI/UX Decisions
 The application adheres to MTN Ghana's brand identity:
@@ -24,7 +24,7 @@ The application adheres to MTN Ghana's brand identity:
 - **Security**: Server-side pricing to prevent tampering, Zod schema validation for all inputs, middleware for admin-only route protection, strict status validation, and real-time polling for admin data.
 - **API Endpoints**: Categorized into public (e.g., list packages, create order, Paystack webhook), protected (user authentication), and admin (order/package management, supplier switching, wallet balance).
 - **Payment & Fulfillment Flow**: Orders are created server-side with calculated fees, processed via Paystack, and then automatically fulfilled by the active data supplier.
-- **Multi-Supplier Architecture**: A `supplier-manager` pattern facilitates routing orders to either DataXpress or Hubnet based on an admin-selected active supplier. This allows for manual switching and dual wallet monitoring but does not include automatic failover.
+- **Multi-Supplier Architecture**: A `supplier-manager` pattern facilitates routing orders to DataXpress, Hubnet, or DataKazina based on an admin-selected active supplier. This allows for manual switching and triple wallet monitoring but does not include automatic failover.
 
 ## External Dependencies
 - **PostgreSQL (Neon)**: Relational database for all application data.
@@ -32,3 +32,4 @@ The application adheres to MTN Ghana's brand identity:
 - **Replit Auth**: OpenID Connect-based authentication for user and admin access.
 - **DataXpress API**: Primary data supplier for MTN data package fulfillment.
 - **Hubnet API**: Secondary data supplier for MTN data package fulfillment.
+- **DataKazina API**: Third data supplier for MTN data package fulfillment. Base URL: `https://reseller.dakazinabusinessconsult.com/api/v1`, Auth header: `x-api-key`, uses `shared_bundle` IDs for package sizes and `network_id: 3` for MTN.
