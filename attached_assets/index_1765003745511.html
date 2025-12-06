@@ -1,0 +1,86 @@
+
+<!-- saved from url=(0082)chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/index.html?1765003501354 -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="./css" rel="stylesheet">
+    <link rel="stylesheet" href="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./font-awesome.min.css">
+    <link rel="stylesheet" href="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/assets/css/sidebar.css">
+
+</head>
+
+<body>
+
+    <div id="ftl-toaster"></div>
+    <div class="loader" id="loader">
+        <div class="loader-body" id="loader-body">
+            <!-- <p>Loading</p> -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 70" class="spinnerLog">
+                <path fill="none" d="M0 70V0h70v70z" opacity=".5"></path>
+                <circle cx="-35" cy="35" r="29" fill="none" stroke="#a1a1a1" transform="rotate(-90)"></circle>
+                <circle cx="-6.5" cy="34.5" r="6.5" fill="#fc5b5d" fill-rule="evenodd" transform="rotate(-90)"></circle>
+            </svg>
+        </div>
+    </div>
+    <div id="app-view"><div class="form text-center">
+    <img src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/assets/img/logo.svg">
+    <h3>Welcome Back!</h3>
+    <div class="flex google-link pointer">
+        <svg width="19" height="18" viewBox="0 0 19 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18.5 9.20248C18.5 8.60998 18.4464 8.04748 18.3544 7.49998H9.6954V10.8825H14.6533C14.431 11.9925 13.7797 12.93 12.8142 13.5675V15.8175H15.772C17.5038 14.25 18.5 11.94 18.5 9.20248Z" fill="#4285F4"></path>
+            <path d="M9.69539 18C12.1781 18 14.2548 17.19 15.772 15.8175L12.8142 13.5675C11.9866 14.1075 10.9368 14.4375 9.69539 14.4375C7.29692 14.4375 5.26627 12.855 4.5383 10.7175H1.48849V13.035C2.99807 15.975 6.10152 18 9.69539 18Z" fill="#34A853"></path>
+            <path d="M4.53831 10.7176C4.34674 10.1776 4.24713 9.60006 4.24713 9.00006C4.24713 8.40006 4.35441 7.82257 4.53831 7.28257V4.96507H1.4885C0.860152 6.18007 0.5 7.54507 0.5 9.00006C0.5 10.4551 0.860152 11.8201 1.4885 13.0351L4.53831 10.7176Z" fill="#FBBC05"></path>
+            <path d="M9.69539 3.56249C11.0517 3.56249 12.2624 4.02 13.2203 4.91249L15.841 2.3475C14.2548 0.892499 12.1781 0 9.69539 0C6.10152 0 2.99807 2.025 1.48849 4.96499L4.5383 7.28249C5.26627 5.14499 7.29692 3.56249 9.69539 3.56249Z" fill="#EA4335"></path>
+        </svg>
+        <span>Log in with Google</span>    
+    </div>
+    <div class="divider flex">
+        <div class="line"></div>
+        <div class="middle">Or</div>
+        <div class="line"></div>
+    </div>
+    <form id="login-form">
+        <div>
+            <input class="ftl-input" id="input-email" type="email" required="" placeholder="Enter your work email">
+        </div>
+        <div class="pos-rel">
+            <input type="password" required="" id="input-password" class="ftl-input" placeholder="Enter your password">
+            <i class="password-icon fa fa-eye-slash"></i>
+        </div>
+        <button class="mb10 btn-ftl btn-blue">Log in</button>
+        <button type="button" id="create-ac-btn" class="mb10 btn-ftl btn-white">Create an account</button>
+        <a href="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/index.html?1765003501354#" target="_blank" class="forgot-password-text blue-color">Forgot your password?<p></p>
+    
+</a></form></div></div>
+    <div id="modalTemplates"></div>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/assets/js/jquery.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/assets/js/moment.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/assets/js/libs.js"></script>
+    <script type="text/javascript" src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/assets/js/bootstrap.min.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/index.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/home.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/noLiUser.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/login.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/signup.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/verifyCode.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/menu.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/settings.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/manager.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/prospectPage.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/prospectInfoPage.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/bulkScan.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/services/crunchbase.services.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/crunchBaseProfile.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/crunchBaseOrg.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/googlePage.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/domainPage.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/elements/prospectComponent.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/elements/emailComponent.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/elements/progressbar.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/elements/companyInfoComponent.js"></script>
+    <script src="chrome-extension://ieclmcodiiodchgppgmdponbgpbfnbkj/views/templates/elements/categoryListComponent.js"></script>
+
+
+
+</body></html>
