@@ -50,7 +50,9 @@ function getSharedBundleId(dataAmount: string): number {
 interface DataKazinaPurchaseRequest {
   recipient_msisdn: string;
   network_id: number;
-  shared_bundle: number;
+  data_plan?: string;  // Try sending as string (e.g., "1GB")
+  volume?: number;     // Try sending volume in MB
+  shared_bundle?: number;
   incoming_api_ref: string;
 }
 
@@ -92,19 +94,29 @@ export async function purchaseDataBundle(
   }
 
   try {
-    const sharedBundleId = getSharedBundleId(dataAmount);
+    // Parse data amount to get volume in MB (e.g., "5GB" -> 5000)
+    const volumeMatch = dataAmount.match(/^(\d+)(GB|MB)$/i);
+    let volumeInMB = 0;
+    if (volumeMatch) {
+      const value = parseInt(volumeMatch[1], 10);
+      const unit = volumeMatch[2].toUpperCase();
+      volumeInMB = unit === "GB" ? value * 1000 : value;
+    }
 
+    // Try sending data_plan as string since they said "there's no IDs"
     const requestBody: DataKazinaPurchaseRequest = {
       recipient_msisdn: phoneNumber,
       network_id: 3, // MTN Ghana
-      shared_bundle: sharedBundleId,
+      data_plan: dataAmount, // Send as string like "1GB"
+      volume: volumeInMB,    // Also send volume in MB
       incoming_api_ref: orderReference,
     };
 
     console.log(`📡 Sending data order to DataKazina:`, {
       phone: phoneNumber,
       dataAmount: dataAmount,
-      sharedBundle: sharedBundleId,
+      volumeInMB: volumeInMB,
+      network_id: 3,
       supplierCost: price,
       ref: orderReference,
     });
